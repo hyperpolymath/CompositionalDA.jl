@@ -10,9 +10,11 @@ live in a separate package,
 It needs no Python and no TensorFlow. R is needed only for the optional reference
 backend.
 
-> **Status: v0.1.0, core layer only.** Closure, the centred log-ratio, zero
-> policies, Benjamini–Hochberg and the result/provenance types are implemented.
-> The methods land one per release: ALDEx2 (v0.2), then ANCOM-BC (v0.3).
+> **Status: v0.2.0.** The core layer (closure, the centred log-ratio, zero
+> policies, Benjamini–Hochberg, result/provenance types) and two-group ALDEx2
+> (`aldex2`) are implemented. ALDEx2 is defined by `docs/ALDEx2-SPEC.md` and
+> agrees with Bioconductor ALDEx2 1.42.0 within Monte-Carlo noise on the mock,
+> gut and soil datasets. ANCOM-BC lands in v0.3.
 > Nothing here claims a method that is not yet in `src/`.
 
 ## Input contract

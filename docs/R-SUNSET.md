@@ -3,15 +3,17 @@
 
 # Sunset criterion for the R reference backend
 
-> **Status:** the extension described here is planned and not yet in the tree:
-> there is no `ext/` directory and no `test/oracle_*.jl` yet.
+> **Status (v0.2.0):** ALDEx2 is release 1 of 2 within tolerance (oracle run of
+> 2026-10-02, all 13 checks passing). The frozen fixtures under `test/fixtures/`
+> described below do not exist yet.
 
 The R backend (`ext/CompositionalDARCallExt.jl`, loaded only when RCall is
-present) is a bridge, not a product. It never owns R state. Callers pass an
-`evaluator` function, so a host application keeps its own R session and lock.
+present) is a bridge, not a product. It never owns R state. Every R call runs inside a
+caller-supplied `runner` function, so a host application keeps its own R session
+and lock (MetaManifold passes its `with_r_lock`).
 
 **Criterion.** For each method, once the native implementation agrees with the R
-reference within the tolerances stated in `test/oracle_*.jl` on all three
+reference within the tolerances stated in `test/oracle/runoracle.jl` on all three
 reference datasets (mock, gut, soil) for **two consecutive releases**, that
 method's R path is marked deprecated in the next release and receives no
 further maintenance. When no method still needs it, the extension is deleted.

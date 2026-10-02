@@ -43,10 +43,50 @@ jobs:
     steps:
       - name: Install the pinned Debian toolchain
         run: |
-          apt-get update
-          apt-get install --no-install-recommends -y ca-certificates git agda-bin=2.6.4.3-1+b2 agda-stdlib=2.1-4
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/agda.tar.xz" \
+            https://github.com/agda/agda/releases/download/v2.7.0.1/Agda-v2.7.0.1-linux.tar.xz
+          echo "${AGDA_SHA256}  $RUNNER_TEMP/agda.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/agda.tar.xz" -C "$RUNNER_TEMP"
+          echo "Agda_datadir=$RUNNER_TEMP/Agda-v2.7.0.1/data" >> "$GITHUB_ENV"
+          echo "AGDA_BIN=$RUNNER_TEMP/Agda-v2.7.0.1/bin/agda" >> "$GITHUB_ENV"
+      - name: Type-check and axiom audit
+        run: proofs/bootstrap.sh
+      - name: Gate self-test (the gate must reject planted defects)
+        run: proofs/tests/gate-selftest.sh
+  oracle:
+    name: R reference oracle (R 4.5.0, Bioconductor 3.22)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      R_LIBS_USER: ${{ github.workspace }}/.r-lib
+    steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
-          persist-credentials: false
-      - name: Proof gate (axiom audit, type-check, reject controls, gate self-test)
-        run: proofs/check.sh
+          r-version: '4.5.0'
+          use-public-rspm: true
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .r-lib
+          key: r-4.5.0-bioc-3.22-oracle-v1
+      - name: Install the Bioconductor 3.22 references
+        run: |
+          mkdir -p "$R_LIBS_USER"
+          Rscript -e 'options(Ncpus = 4, timeout = 3600)
+            if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+            BiocManager::install(version = "3.22", ask = FALSE, update = FALSE)
+            for (p in c("ALDEx2")) if (!requireNamespace(p, quietly = TRUE)) BiocManager::install(p, ask = FALSE, update = FALSE)
+            for (p in c("ALDEx2")) cat(p, as.character(packageVersion(p)), "\n")'
+      - uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9 # v2
+        with:
+          version: '1.12'
+      - uses: julia-actions/cache@d10a6fd8f31b12404a54613ebad242900567f2b9 # v2
+      - name: Native vs reference agreement
+        run: |
+          export R_HOME="$(R RHOME)"
+          # Skip Pkg's bulk precompile: it reports a failed extension without its error.
+          # Loading directly below surfaces the real error if there is one.
+          JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=test/oracle -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+          julia --project=test/oracle -e 'using CompositionalDA, RCall; @assert Base.get_extension(CompositionalDA, :CompositionalDARCallExt) !== nothing'
+          julia --project=test/oracle test/oracle/runoracle.jl

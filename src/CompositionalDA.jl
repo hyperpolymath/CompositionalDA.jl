@@ -16,8 +16,11 @@ proved in `proofs/agda` and mirrored by property tests in `test/`. See
 module CompositionalDA
 
 using DataFrames
+using Distributions: Gamma, Normal, ccdf
+using HypothesisTests: UnequalVarianceTTest, pvalue
 using LinearAlgebra
 using Random
+using StableRNGs: StableRNG
 using Statistics
 
 include("Core/errors.jl")
@@ -25,11 +28,13 @@ include("Core/zeros.jl")
 include("Core/composition.jl")
 include("Core/bh.jl")
 include("Core/result.jl")
+include("Methods/ALDEx2.jl")
 
 export CompositionError
 export ZeroPolicy, RefuseZeros, Pseudocount, MultiplicativeReplacement, replace_zeros
 export validate_counts, closure, clr
 export bh_adjust
 export Provenance, DAResult
+export aldex2, aldex2_reference, dirichlet_clr_instances
 
 end # module

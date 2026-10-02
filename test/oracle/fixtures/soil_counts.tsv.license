@@ -1,0 +1,4 @@
+SPDX-License-Identifier: CC-BY-4.0
+SPDX-FileCopyrightText: 2021 Jacob T. Nearing et al. (figshare doi:10.6084/m9.figshare.14531724.v1)
+Modified 2026 by Jonathan D.A. Jewell: one study extracted, samples intersected with metadata,
+features filtered by prevalence (see test/oracle/make_fixtures.jl). See docs/DATASETS.md.

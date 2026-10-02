@@ -1,3 +1,4 @@
 /Manifest.toml
 *.agdai
 _build/
+/test/oracle/Manifest.toml
