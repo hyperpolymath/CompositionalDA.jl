@@ -1,4 +1,4 @@
 name: compositionalda
 include: .
-depend: standard-library
+depend: standard-library-2.1
 flags: --safe --without-K

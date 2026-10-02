@@ -23,7 +23,7 @@ module CompositionalDA.Prelude where
 
 open import Data.Integer as ℤ using (ℤ; +_; +0; +[1+_]; -[1+_]; _*_; _+_; _≤_)
 open import Data.Integer.Properties as ℤₚ
-  using (pos-*; pos-+; *-comm; *-zeroˡ; _≡?_; *-monoʳ-≤-nonNeg)
+  using (pos-*; pos-+; *-comm; *-zeroˡ; _≟_; *-monoʳ-≤-nonNeg)
   renaming (+-*-commutativeRing to +-*-commutativeRingℤ)
 open import Data.Nat.Base using (z≤n)
 open import Data.Nat.Base as ℕ using (ℕ; zero; suc)
@@ -44,7 +44,7 @@ open import Relation.Nullary.Decidable using (yes; no)
 infix 4 _≟ℚᵘ_
 
 _≟ℚᵘ_ : Decidable _≃_
-p ≟ℚᵘ q with (↥ p * ↧ q) ≡? (↥ q * ↧ p)
+p ≟ℚᵘ q with (↥ p * ↧ q) ≟ (↥ q * ↧ p)
 ... | yes e  = yes (*≡* e)
 ... | no  ¬e = no (λ where (*≡* e) → ¬e e)
 
@@ -67,7 +67,7 @@ import Algebra.Solver.Ring.Simple as RingSolver
 module ℚᵘ-Solver = RingSolver (fromCommutativeRing +-*-commutativeRing) _≟ℚᵘ_
 open ℚᵘ-Solver public using (con; _:+_; _:*_; _:=_) renaming (solve to solve-ℚ)
 
-module ℤ-Solver = RingSolver (fromCommutativeRing +-*-commutativeRingℤ) _≡?_
+module ℤ-Solver = RingSolver (fromCommutativeRing +-*-commutativeRingℤ) _≟_
 open ℤ-Solver public using ()
   renaming (solve to solve-ℤ; _:=_ to _:=ℤ_; con to conℤ; _:+_ to _:+ℤ_; _:*_ to _:*ℤ_)
 
