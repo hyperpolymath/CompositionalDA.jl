@@ -33,7 +33,7 @@ q = bh_adjust([0.01, 0.04, 0.2])                # equals R's p.adjust(, "BH")
 
 ## Proved and tested are kept apart
 
-`proofs/agda` holds machine-checked proofs (Agda 2.7.0.1, `--safe --without-K`,
+`proofs/agda` holds machine-checked proofs (Debian 13's Agda 2.6.4.3 with agda-stdlib 2.1, `--safe --without-K`,
 no postulates) of the algebraic properties the methods rely on. Each CLR theorem is
 mirrored by a Julia property test. Each property test is in turn shown to reject
 a planted mutant (`test/mutants.jl`). The Benjamini–Hochberg step-up (P5: q ≥ p,
@@ -56,7 +56,7 @@ criterion; see [`docs/R-SUNSET.md`](docs/R-SUNSET.md).
 
 ```sh
 julia --project -e 'using Pkg; Pkg.test()'
-proofs/bootstrap.sh && proofs/tests/gate-selftest.sh   # needs Agda 2.7.0.1
+proofs/check.sh                                   # Debian 13: apt install agda agda-stdlib
 ```
 
 ## Licence

@@ -5,8 +5,8 @@ SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@
 
 # Proof status
 
-Machine-checked proofs for CompositionalDA.jl, in **Agda 2.7.0.1** with
-**agda-stdlib pinned at `2ffa8b7d4e8e818717ad643d184f055a4d1b0447`**, under
+Machine-checked proofs for CompositionalDA.jl, in **Agda 2.6.4.3** with
+**agda-stdlib 2.1** (Debian 13's `agda-bin` and `agda-stdlib` packages), under
 `--safe --without-K`. Three words are kept apart throughout this file:
 
 - **proved** — type-checked by Agda with zero postulates, zero holes and
@@ -17,24 +17,24 @@ Machine-checked proofs for CompositionalDA.jl, in **Agda 2.7.0.1** with
   shown to reject a planted mutant in `test/mutants.jl`.
 - **not done** — neither of the above. Listed, not implied.
 
-> **The stdlib pin is a development SHA, not a release.** The branch's own
-> library file declares `name: standard-library-3.0` and no `v3.0` tag exists.
-> `proofs/bootstrap.sh` normalises the name and refuses any other revision.
+> **The toolchain is the Debian 13 pin, not a vendored release.** `proofs/lib.sh`
+> resolves `/usr/bin/agda` before anything on `PATH`, checks the version is
+> 2.6.4.3 and the library is `standard-library-2.1`, and refuses any other.
 
 ## Gates
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Type-check every proof, then audit | `proofs/bootstrap.sh` | PASS — exit 0, no warnings |
+| Type-check every proof, audit, then self-test | `proofs/check.sh` | PASS — exit 0, no warnings |
 | Axiom audit on its own | `proofs/tests/axiom-audit.sh` | PASS — 7/7 modules reachable from `CompositionalDA.All`, no postulates, no FFI, no unsound flags, no holes, all `--safe` |
 | Gate self-test (does the gate reject anything?) | `proofs/tests/gate-selftest.sh` | PASS — see "Last verified" below for the count |
 
-The CI job `proofs` in `.github/workflows/ci.yml` runs exactly those first and
-third commands with `AGDA_BIN` and `Agda_datadir` set to the pinned release
-tarball. `bootstrap.sh` vendors the stdlib at the pinned SHA into
-`proofs/.vendor` (git-ignored) and writes `proofs/.agda-libraries`; the
-self-test reads that file, so the two scripts cannot disagree about which
-library they checked against.
+The CI job `proofs` in `.github/workflows/ci.yml` runs `proofs/check.sh` in a
+digest-pinned `debian:13-slim` container with `agda-bin=2.6.4.3-1+b2` and
+`agda-stdlib=2.1-4` installed from apt. `check.sh` type-checks, audits and
+then runs the self-test; both scripts resolve the prover and the library
+through `proofs/lib.sh`, so they cannot disagree about what they checked
+against.
 
 The exact commands, exit codes and counts of the most recent run are in
 "Last verified" at the end of this file.
@@ -221,41 +221,42 @@ is one control per check in `axiom-audit.sh` (seven). The controls:
 ## Reproducing
 
 ```sh
-proofs/bootstrap.sh                 # vendor the stdlib at the pin, type-check, audit
+proofs/check.sh                     # type-check, audit, then the gate self-test
 proofs/tests/gate-selftest.sh       # prove the gate rejects planted defects
 proofs/tests/axiom-audit.sh         # the audit alone
 ```
 
-`bootstrap.sh` needs exactly `Agda version 2.7.0.1` as `AGDA_BIN` or `agda`
-on `PATH`, with `Agda_datadir` pointing at the release tarball's `data/`
-directory; it prints the install steps and fails if the version differs. It
-does not install Agda (no package manager, no Python) and never writes into
-the toolchain's data directory. **An absent prover is a failure, never a
+`check.sh` needs Debian 13's `agda-bin` 2.6.4.3 and `agda-stdlib` 2.1
+(`apt install agda agda-stdlib`); `lib.sh` fails, naming the version it saw,
+if anything else is found first. Nothing is downloaded and nothing is written
+into the toolchain's data directory. **An absent prover is a failure, never a
 skip** — in CI and locally alike.
 
 ## Last verified
 
-2026-10-02, one run of the unmodified CI interface, from an **empty**
-`proofs/.vendor` (so the stdlib was fetched at the pin and type-checked from
-scratch), with the release binary the CI job downloads:
+2026-10-02, after rebasing onto PR #2 (`320513d`, which added `StepUp` and
+the 18-control self-test), one run of the CI interface with Debian 13's
+packages (`agda-bin 2.6.4.3-1+b2`, `agda-stdlib 2.1-4`), interface files
+deleted first so every module was checked from source:
 
 ```
-AGDA_BIN=…/Agda-v2.7.0.1/bin/agda  Agda_datadir=…/Agda-v2.7.0.1/data
-proofs/bootstrap.sh              → exit 0   (7 modules reachable from CompositionalDA.All; axiom-audit: clean)
+proofs/check.sh                  → exit 0   (check: Agda version 2.6.4.3, standard-library-2.1;
+                                             axiom-audit: 7 module(s) reachable from CompositionalDA.All, clean;
+                                             CompositionalDA/All.agda type-checks;
+                                             gate-selftest: 18/18 controls behaved correctly)
 proofs/tests/gate-selftest.sh    → exit 0   (gate-selftest: 18/18 controls behaved correctly)
 proofs/tests/axiom-audit.sh      → exit 0   (auditing 7 module(s); axiom-audit: clean)
 ```
 
-Wall-clock 14:18:26Z → 14:22:32Z, almost all of it the stdlib. The self-test
-was re-run after rebasing onto PR #1, which added the four remaining audit
-controls; a planted wrong reason on one of them was reported as a FAIL
-(17/18), so the reason check is live. The 18
-controls are the 14 mutations, the 3 `reject/` files and the pristine tree
-listed above; each mutation was confirmed to have changed its file before the
-gate was run, and each `reject/` file was refused with exit 42 and the error
-its `-- EXPECT:` line names.
+Wall-clock 14:58:02Z → 15:00:00Z. The only source change the 2.1 library
+needed was `_≡?_` → `_≟_` on ℤ in `Prelude.agda`; `StepUp.agda` needed
+none. The 18 controls are the 14 mutations, the 3 `reject/` files and the
+pristine tree listed above; each mutation is confirmed to have changed its
+file before the gate runs, and each `reject/` file is refused with exit 42
+and the error its `-- EXPECT:` line names. The same 18/18 was obtained on
+Agda 2.7.0.1 with the stdlib development SHA at PR #2 (14:18Z–14:22Z).
 
-The Julia side, same day:
+The Julia side, same run:
 
 ```
 julia --project -e 'using Pkg; Pkg.test()'   → exit 0   (Test Summary: CompositionalDA | Pass 43 | Total 43)

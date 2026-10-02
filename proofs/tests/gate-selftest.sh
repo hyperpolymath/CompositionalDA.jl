@@ -25,55 +25,15 @@
 #
 # Usage: proofs/tests/gate-selftest.sh
 #
-# Environment (same interface as proofs/bootstrap.sh):
-#   AGDA_BIN      path to the agda binary (default: `agda` on PATH)
-#   PROOFS_VENDOR where bootstrap.sh vendored the stdlib (default: proofs/.vendor)
+# Toolchain: Debian 13's Agda 2.6.4.3 and agda-stdlib 2.1, resolved by
+# proofs/lib.sh (nothing is vendored; an absent or wrong prover is a failure).
 
 set -uo pipefail
 
-PROOFS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=proofs/lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 NAMESPACE="CompositionalDA"
 LIB_BASENAME="compositionalda.agda-lib"
-VENDOR="${PROOFS_VENDOR:-$PROOFS_DIR/.vendor}"
-
-# Print a fatal error on stderr and exit 1.  Every setup failure goes through
-# here; a self-test that cannot run must not look like a self-test that passed.
-die() { printf 'gate-selftest: FATAL: %s\n' "$*" >&2; exit 1; }
-
-# Set AGDA from AGDA_BIN or PATH, the same way bootstrap.sh does.  There is no
-# vendored-binary fallback: the estate installs Agda from the release tarball,
-# and an absent prover is a failure here, not a skip.
-resolve_agda() {
-  if [[ -n "${AGDA_BIN:-}" ]]; then
-    AGDA="$AGDA_BIN"
-  elif command -v agda >/dev/null 2>&1; then
-    AGDA="$(command -v agda)"
-  else
-    die "agda not found (run proofs/bootstrap.sh, or set AGDA_BIN)"
-  fi
-  [[ -x "$AGDA" ]] || die "$AGDA is not executable"
-}
-
-# Set STDLIB_LIBS to the library files the gate depends on, read from the
-# `proofs/.agda-libraries` that bootstrap.sh wrote (every line except the
-# project's own library file).  Falls back to the conventional vendored
-# location if that file is absent, and fails if neither exists.
-resolve_stdlib() {
-  STDLIB_LIBS=()
-  local libs_file="$PROOFS_DIR/.agda-libraries" line
-  if [[ -f "$libs_file" ]]; then
-    while IFS= read -r line; do
-      [[ -z "$line" ]] && continue
-      [[ "$(basename "$line")" == "$LIB_BASENAME" ]] && continue
-      [[ -f "$line" ]] || die "$libs_file names $line, which does not exist"
-      STDLIB_LIBS+=("$line")
-    done < "$libs_file"
-  elif [[ -f "$VENDOR/agda-stdlib/standard-library.agda-lib" ]]; then
-    STDLIB_LIBS+=("$VENDOR/agda-stdlib/standard-library.agda-lib")
-  fi
-  [[ ${#STDLIB_LIBS[@]} -gt 0 ]] \
-    || die "standard library not found; run proofs/bootstrap.sh first"
-}
 
 resolve_agda
 resolve_stdlib
@@ -99,10 +59,7 @@ reset_tree
 # Point Agda at the *copy*: without this the library file would resolve
 # `CompositionalDA.All` back to the pristine tree and every mutation below would
 # be checked against unmutated sources — a self-test that tests nothing.
-{
-  printf '%s\n' "$WORK/agda/$LIB_BASENAME"
-  printf '%s\n' "${STDLIB_LIBS[@]}"
-} > "$WORK/libraries"
+write_libraries "$WORK/libraries" "$WORK/agda"
 
 # Type-check the copy's entry module with the gate's exact flags.  Output goes
 # to $WORK/out.txt; the exit status is the verdict.
