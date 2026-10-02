@@ -78,6 +78,9 @@ jobs:
         with:
           version: '1.12'
       - uses: julia-actions/cache@d10a6fd8f31b12404a54613ebad242900567f2b9 # v2
+      # RCall.jl's own CI does the same: libR's directory must be on the loader path.
+      - name: Put libR on the loader path
+        run: echo "LD_LIBRARY_PATH=$(R RHOME)/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
       - name: R can load ALDEx2
         run: Rscript -e 'library(ALDEx2); cat(R.version.string, "ALDEx2", as.character(packageVersion("ALDEx2")), "\n")'
       - name: Julia can start R through RCall
