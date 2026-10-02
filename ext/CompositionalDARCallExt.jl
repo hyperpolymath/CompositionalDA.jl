@@ -38,7 +38,11 @@ function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, fea
         set.seed($seed)
         reads <- as.data.frame(reads); rownames(reads) <- fnames
         colnames(reads) <- paste0("s", seq_len(ncol(reads)))
-        res <- ALDEx2::aldex(reads, factor(conds, levels = lv), mc.samples = $mc_samples,
+        # A character vector, not a factor: ALDEx2 1.42 calls round() on conds,
+        # which errors for a factor. It builds its own factor, so the level
+        # order is the same sorted order as `lv`.
+        stopifnot(identical(sort(unique(conds)), lv))
+        res <- ALDEx2::aldex(reads, conds, mc.samples = $mc_samples,
                              test = "t", effect = TRUE, denom = "all", verbose = FALSE)
         res <- res[fnames, ]
         res$feature <- rownames(res)
@@ -47,9 +51,10 @@ function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, fea
         rcopy(DataFrame, R"res"), rcopy(String, R"aldex_version")
     end
     res, ver = df
-    table = DataFrame(feature = res[!, "feature"], effect = res[!, "effect"], pvalue = res[!, "we.ep"],
-                      qvalue = res[!, "we.eBH"], wi_pvalue = res[!, "wi.ep"], wi_qvalue = res[!, "wi.eBH"],
-                      diff_btw = res[!, "diff.btw"], diff_win = res[!, "diff.win"], rab_all = res[!, "rab.all"])
+    # rcopy turns R's dotted column names (we.ep, diff.btw, ...) into underscores.
+    table = DataFrame(feature = res[!, "feature"], effect = res[!, "effect"], pvalue = res[!, "we_ep"],
+                      qvalue = res[!, "we_eBH"], wi_pvalue = res[!, "wi_ep"], wi_qvalue = res[!, "wi_eBH"],
+                      diff_btw = res[!, "diff_btw"], diff_win = res[!, "diff_win"], rab_all = res[!, "rab_all"])
     prov = Provenance(:aldex2, :r_reference; seed, mc_samples, r_package = "ALDEx2 $ver",
                       contrast = "$(levels[2]) vs $(levels[1])")
     return DAResult(table, prov)

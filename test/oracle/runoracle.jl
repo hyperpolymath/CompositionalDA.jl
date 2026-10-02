@@ -15,7 +15,7 @@ include("datasets.jl")
 
 const MC = 512
 const SLACK = 2.0
-const FLOOR = (effect = 0.05, pvalue = 0.01)
+const FLOOR = (effect = 0.05, pvalue = 0.01, wi_pvalue = 0.01)
 
 """Largest absolute difference of column `c` between two result tables."""
 maxdiff(a, b, c) = maximum(abs.(a.table[!, c] .- b.table[!, c]))
@@ -23,11 +23,12 @@ maxdiff(a, b, c) = maximum(abs.(a.table[!, c] .- b.table[!, c]))
 """
     agree(native, r1, r2) -> NamedTuple
 
-Native-vs-R and R-vs-R(other seed) distances for effect and expected Welch p,
+Native-vs-R and R-vs-R(other seed) distances for effect, expected Welch p and
+expected Wilcoxon p,
 and whether native is within tolerance of R for each.
 """
 function agree(native, r1, r2)
-    out = map((:effect, :pvalue)) do c
+    out = map((:effect, :pvalue, :wi_pvalue)) do c
         dn = maxdiff(native, r1, c); dr = maxdiff(r2, r1, c)
         c => (native = dn, r_vs_r = dr, ok = dn <= SLACK * dr + FLOOR[c])
     end
@@ -44,6 +45,7 @@ end
         println(name, ": ", a, "  R=", r1.provenance.parameters)
         @test a.effect.ok
         @test a.pvalue.ok
+        @test a.wi_pvalue.ok
         @test cor(nat.table.effect, r1.table.effect) > 0.99
         if !isempty(truth)
             hit(t) = Set(t.table.feature[t.table.qvalue .< 0.05])
