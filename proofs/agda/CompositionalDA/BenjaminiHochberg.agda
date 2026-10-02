@@ -79,7 +79,7 @@ monotone-in-family-size M M′ j n d M≤M′ {{np}} =
       (ℤₚ.≤-trans (ℤₚ.*-monoˡ-≤-nonNeg n {{np}} (ℤ.+≤+ M≤M′))
                   (ℤₚ.≤-reflexive (ℤₚ.*-comm n (+ M′)))))
 -- Non-negativity of the scaled value is left as an open obligation, recorded in
--- `proofs/residue/benjamini-hochberg.residue`.  The obstacle is mechanical, not
+-- `proofs/PROOF-STATUS.md` (Open obligations).  The obstacle is mechanical, not
 -- conceptual: `+ M * + n` does not reduce to `+ (M ℕ.* n)`, so the non-negativity
 -- lemmas in `Data.Integer.Properties`, which are stated about the reduced form,
 -- do not apply directly, and the sign/absolute-value form `ℤ._*_` actually

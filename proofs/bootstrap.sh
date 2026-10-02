@@ -42,7 +42,7 @@ AGDA_RELEASE_URL="https://github.com/agda/agda/releases/tag/v${AGDA_VERSION}"
 # development line towards 3.0 — the branch self-identifies as
 # `standard-library-3.0` but no `v3.0` tag has been cut.  They do NOT compile
 # against the latest release (v2.4) or against v2.1.  See
-# proofs/residue/toolchain.residue.
+# proofs/PROOF-STATUS.md (Open obligations).
 STDLIB_VERSION="2ffa8b7d4e8e818717ad643d184f055a4d1b0447"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
