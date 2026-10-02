@@ -29,23 +29,24 @@ jobs:
       - uses: julia-actions/julia-buildpkg@e3eb439fad4f9aba7da2667e7510e4a46ebc46e1 # v1
       - uses: julia-actions/julia-runtest@6e050c8013b833b1195105ff2fce9cd802f53271 # v1
   proofs:
-    name: Agda proofs (2.7.0.1)
+    name: Agda proofs (Debian 2.6.4.3, stdlib 2.1)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    # Same recipe as MetaManifold-Evidence and residual-evidence-types: Debian's
+    # agda and agda-stdlib packages at exact versions inside a digest-pinned
+    # image.  Nothing is fetched from GitHub releases or vendored by SHA;
+    # proofs/lib.sh refuses any other Agda.
+    container: debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
     env:
-      AGDA_SHA256: 975b515a14877ab6bce5bfc641e16c4a3ee52ca5d7f846577dee80aa2145db8a
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Install the pinned Agda release binary
+      - name: Install the pinned Debian toolchain
         run: |
-          set -euo pipefail
-          curl -fsSL -o "$RUNNER_TEMP/agda.tar.xz" \
-            https://github.com/agda/agda/releases/download/v2.7.0.1/Agda-v2.7.0.1-linux.tar.xz
-          echo "${AGDA_SHA256}  $RUNNER_TEMP/agda.tar.xz" | sha256sum --check
-          tar -xJf "$RUNNER_TEMP/agda.tar.xz" -C "$RUNNER_TEMP"
-          echo "Agda_datadir=$RUNNER_TEMP/Agda-v2.7.0.1/data" >> "$GITHUB_ENV"
-          echo "AGDA_BIN=$RUNNER_TEMP/Agda-v2.7.0.1/bin/agda" >> "$GITHUB_ENV"
-      - name: Type-check and axiom audit
-        run: proofs/bootstrap.sh
-      - name: Gate self-test (the gate must reject planted defects)
-        run: proofs/tests/gate-selftest.sh
+          apt-get update
+          apt-get install --no-install-recommends -y ca-certificates git agda-bin=2.6.4.3-1+b2 agda-stdlib=2.1-4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Proof gate (axiom audit, type-check, reject controls, gate self-test)
+        run: proofs/check.sh
