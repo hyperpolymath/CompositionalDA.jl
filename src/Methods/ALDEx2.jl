@@ -12,8 +12,10 @@ proportions from Dirichlet(counts[i, :] .+ prior) by normalising Gamma(α, 1)
 draws, then take the CLR of the draw. The result is indexed
 `[sample, feature, instance]`.
 
-Each draw is closed before the log, so the CLR of every instance is invariant to
-the sample's sequencing depth up to the prior (P3, proofs/PROOF-STATUS.md).
+Every instance is centred: each sample's row sums to zero (tested as P3 in
+`test/property_aldex2.jl`, not proved). The instances are deliberately not
+depth-invariant: a deeper sample has a tighter Dirichlet posterior, which is how
+ALDEx2 carries sampling uncertainty into the tests.
 """
 function dirichlet_clr_instances(rng::AbstractRNG, counts::AbstractMatrix{<:Integer};
                                  mc_samples::Integer = 128, prior::Real = 0.5)

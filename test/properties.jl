@@ -59,9 +59,8 @@ function count_tables(seed; n = 8)
     end
 end
 
-"""P3: every Monte-Carlo instance from generator `f(rng, counts)` is a CLR:
-each instance row sums to zero, and is unchanged when a sample's counts are
-replicated across a constant column offset in log space (closure cancels)."""
+"""P3: every Monte-Carlo instance from generator `f(rng, counts)` is centred
+like a CLR: each sample's row of each instance sums to zero."""
 prop_instances_are_clr(f; seed = 7) = all(count_tables(seed)) do (x, _)
     inst = f(StableRNG(seed), x)
     all(abs.(sum(inst; dims = 2)) .< 1e-9)
