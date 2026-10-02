@@ -1,0 +1,5 @@
+/Manifest.toml
+proofs/.vendor/
+proofs/.agda-libraries
+*.agdai
+_build/

@@ -1,0 +1,4 @@
+name: compositionalda
+include: .
+depend: standard-library
+flags: --safe --without-K
