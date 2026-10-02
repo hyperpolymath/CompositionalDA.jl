@@ -34,9 +34,10 @@ q = bh_adjust([0.01, 0.04, 0.2])                # equals R's p.adjust(, "BH")
 `proofs/agda` holds machine-checked proofs (Agda 2.7.0.1, `--safe --without-K`,
 no postulates) of the algebraic properties the methods rely on. Each CLR theorem is
 mirrored by a Julia property test. Each property test is in turn shown to reject
-a planted mutant (`test/mutants.jl`). The Benjamini–Hochberg proofs cover the
-scaling step only, and its Julia property test checks a different property; the
-table says which is which. Statistical properties such as calibration,
+a planted mutant (`test/mutants.jl`). The Benjamini–Hochberg step-up (P5: q ≥ p,
+q ≤ 1, order-preserving, at the original indices) is proved over exact
+rationals, assuming the input was sorted correctly; the sort itself is not
+verified, and nothing about floating point is proved. Statistical properties such as calibration,
 consistency and FDR control are **not** proved. They are to be tested against
 the R reference implementations; that oracle is not built yet. The full table is in
 [`proofs/PROOF-STATUS.md`](proofs/PROOF-STATUS.md).

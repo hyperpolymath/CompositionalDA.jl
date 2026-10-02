@@ -15,3 +15,4 @@ import CompositionalDA.LogHom
 import CompositionalDA.CLR
 import CompositionalDA.CLR.Instance
 import CompositionalDA.BenjaminiHochberg
+import CompositionalDA.BenjaminiHochberg.StepUp
