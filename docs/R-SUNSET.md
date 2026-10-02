@@ -3,6 +3,9 @@
 
 # Sunset criterion for the R reference backend
 
+> **Status:** the extension described here is planned and not yet in the tree:
+> there is no `ext/` directory and no `test/oracle_*.jl` yet.
+
 The R backend (`ext/CompositionalDARCallExt.jl`, loaded only when RCall is
 present) is a bridge, not a product. It never owns R state. Callers pass an
 `evaluator` function, so a host application keeps its own R session and lock.

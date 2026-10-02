@@ -22,7 +22,7 @@
 -- `clr-constant` (a constant composition has zero CLR) that (b) is built from.
 --
 -- What is NOT here: anything about real numbers, `exp`, continuity, floating
--- point, or the geometry of the simplex.  See `proofs/residue/clr.residue`.
+-- point, or the geometry of the simplex.  See `proofs/PROOF-STATUS.md`.
 
 {-# OPTIONS --without-K --safe #-}
 
