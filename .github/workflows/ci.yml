@@ -80,5 +80,8 @@ jobs:
       - name: Native vs reference agreement
         run: |
           export R_HOME="$(R RHOME)"
-          julia --project=test/oracle -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+          # Skip Pkg's bulk precompile: it reports a failed extension without its error.
+          # Loading directly below surfaces the real error if there is one.
+          JULIA_PKG_PRECOMPILE_AUTO=0 julia --project=test/oracle -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+          julia --project=test/oracle -e 'using CompositionalDA, RCall; @assert Base.get_extension(CompositionalDA, :CompositionalDARCallExt) !== nothing'
           julia --project=test/oracle test/oracle/runoracle.jl
