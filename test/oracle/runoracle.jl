@@ -35,7 +35,7 @@ function agree(native, r1, r2)
 end
 
 @testset "ALDEx2 oracle" begin
-    datasets = Any[("mock", mock_dataset())]
+    datasets = Any[("mock", mock_dataset()), ("gut", fixture_dataset("gut")), ("soil", fixture_dataset("soil"))]
     for (name, (x, f, g, truth)) in datasets
         nat = aldex2(x, f, g; mc_samples = MC, seed = 1)
         r1 = aldex2_reference(x, f, g; mc_samples = MC, seed = 1)
