@@ -16,8 +16,8 @@ proved in `proofs/agda` and mirrored by property tests in `test/`. See
 module CompositionalDA
 
 using DataFrames
-using Distributions: Gamma
-using HypothesisTests: UnequalVarianceTTest, ExactMannWhitneyUTest, ApproximateMannWhitneyUTest, pvalue
+using Distributions: Gamma, Normal, ccdf
+using HypothesisTests: UnequalVarianceTTest, pvalue
 using LinearAlgebra
 using Random
 using StableRNGs: StableRNG

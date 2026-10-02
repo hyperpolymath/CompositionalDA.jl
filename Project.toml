@@ -1,6 +1,6 @@
 name = "CompositionalDA"
 uuid = "a77efed1-127c-5b9d-bf19-e0eccfa50304"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 
 [deps]

@@ -3,8 +3,9 @@
 
 # Sunset criterion for the R reference backend
 
-> **Status:** the extension described here is planned and not yet in the tree:
-> there is no `ext/` directory and no `test/oracle_*.jl` yet.
+> **Status (v0.2.0):** ALDEx2 is release 1 of 2 within tolerance (oracle run of
+> 2026-10-02, all 13 checks passing). The frozen fixtures under `test/fixtures/`
+> described below do not exist yet.
 
 The R backend (`ext/CompositionalDARCallExt.jl`, loaded only when RCall is
 present) is a bridge, not a product. It never owns R state. Every R call runs inside a

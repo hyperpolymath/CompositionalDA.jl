@@ -31,7 +31,10 @@ gut and soil datasets, the p-value rules reproduce its `we.ep`, `we.eBH` and
 `wi.ep` to within 1e-14.
 
 The owner ruled that the native code is written from this document by someone
-who has **not** read the reference source.
+who has **not** read the reference source. That is what happened: a separate
+agent that was barred from the reference source, R and web search wrote
+`src/Methods/ALDEx2.jl` from this document (spec committed alone as `87a6316`,
+before the code).
 
 ## Notation
 
