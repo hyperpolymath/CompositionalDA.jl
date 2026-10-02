@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Residue — the centred log-ratio transform (P1)
+#
+# What `proofs/agda/CompositionalDA/CLR.agda` does NOT prove, each with a
+# status and what would close it.  A residue entry is a named gap, not a
+# claim; `proofs/PROOF-STATUS.md` is the table of what IS proved.
+#
+# Format (one record per obligation):
+#   R-<area>-<n>
+#     statement:   what would be proved
+#     status:      OPEN | NOT ATTEMPTED | OUT OF SCOPE | CLOSED (by <theorem>)
+#     why:         the obstacle, or the reason it is out of scope
+#     impact:      what trusting the unproved claim would cost
+#     closes-with: the shape of a closing proof
+
+R-CLR-1
+  statement: |
+    The CLR theorems hold for the real-valued transform
+    `clr(x)_i = log x_i − (1/n) Σ_j log x_j` on positive reals.
+  status: OUT OF SCOPE (by construction)
+  why: |
+    The Agda development is parametric: `R` is any commutative ring, `log` is
+    any monoid-to-ring homomorphism (`LogHom`), and `1/n` is any reciprocal
+    witness (`Reciprocal`).  The real numbers, `exp`/`log` as functions, and
+    the `n · (1/n) = 1` identity over ℝ are not constructed here.  The theorems
+    therefore say: ANY structure satisfying the two records has these three
+    properties.  That the reals (with the natural logarithm) are such a
+    structure is a fact about ℝ, not about CLR, and is not formalised.
+  impact: |
+    LOW for the algebra, which is exactly what the parametric theorems cover.
+    The step from "the reals satisfy LogHom" to the Julia `clr` is covered by
+    `test/property_clr.jl`, which is tested, not proved.
+  closes-with: |
+    A `LogHom` instance over a constructive real-number ring with a proved
+    logarithm homomorphism.  Not planned.
+
+R-CLR-2
+  statement: |
+    The named assumptions are satisfiable: there is at least one non-trivial
+    `LogHom` and one `Reciprocal`.
+  status: CLOSED (by `CompositionalDA.CLR.Instance.additive-log` and
+    `CompositionalDA.CLR.Instance.reciprocal`)
+  why: |
+    A theorem whose hypotheses nothing satisfies is vacuous.  The instance
+    module takes the monoid `(ℕ, +)` (`Data.Nat.Properties.+-0-commutativeMonoid`)
+    and the ring `ℚᵘ` (`+-*-commutativeRing`), with `log a = mkℚᵘ (+ a) 0`,
+    i.e. `a/1` — additive by definition, so the "logarithm" law is a
+    denominator calculation — and a reciprocal `1/(m+1)` for every `suc m`.
+    It type-checks `CLR` at `n = 2` against them (`module CLR₂`).
+  impact: n/a
+  closes-with: n/a
+
+R-CLR-3
+  statement: |
+    CLR is NOT invariant under an arbitrary perturbation (only under a
+    constant one).
+  status: CLOSED (by `CompositionalDA.CLR.Instance.clr-not-shift-invariant`,
+    and exercised as the negative control `proofs/agda/reject/FakeCLR.agda`)
+  why: |
+    `clr-scale-invariant` needs the perturbing composition to be constant.  A
+    proof that the hypothesis can be dropped must not exist; the instance
+    module proves its negation at `n = 2`, and the gate self-test checks that
+    Agda rejects the attempt.
+  impact: n/a
+  closes-with: n/a
+
+R-CLR-4
+  statement: |
+    Floating-point `clr` in `src/` agrees with the exact transform to within
+    a stated tolerance.
+  status: OUT OF SCOPE
+  why: |
+    IEEE-754 semantics are not modelled.  `test/property_clr.jl` checks the
+    three properties numerically with a tolerance, which is evidence about the
+    implementation and not a proof about it.
+  impact: |
+    MEDIUM in principle (a rounding-order bug would be invisible to the Agda
+    layer); bounded in practice by the property tests and their planted
+    mutants in `test/mutants.jl`.
+  closes-with: |
+    A verified floating-point model.  Not planned.
+
+R-CLR-5
+  statement: |
+    Anything about the Aitchison geometry of the simplex (distances, the ILR
+    basis, the isometry).
+  status: NOT ATTEMPTED
+  why: |
+    Not required by P1.  The three P1 properties are the ones the downstream
+    methods rely on.
+  impact: LOW.
+  closes-with: |
+    An inner-product space over `R` and a proof that `clr` is an isometry
+    onto the zero-sum hyperplane.

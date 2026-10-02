@@ -1,0 +1,125 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Residue — Benjamini–Hochberg (P5)
+#
+# See clr.residue for the record format.  Two modules bear on this file:
+#   `CompositionalDA.BenjaminiHochberg`        the per-rank scaling `bhScale`
+#   `CompositionalDA.BenjaminiHochberg.StepUp` the running-minimum step-up
+#                                              that `src/Core/bh.jl` computes
+#
+# The archived MetaManifold version of this file recorded "ℚᵘ has no ⊓ lemmas"
+# and "q_i ≥ p_i is FALSE in general and must not be attempted".  Both were
+# true of what was being modelled there and are false of what is modelled
+# here: the stdlib at the pinned SHA has the full `_⊓_` lattice for `ℚᵘ`, and
+# `q_i ≥ p_i` is a theorem of the STEP-UP (running minimum from `running = 1`,
+# rank ≤ family size, p ∈ [0,1]), which is what the Julia code computes.  It
+# remains false of the bare per-rank scaling, where `M/(j+1)` can be < 1.
+
+R-BH-1
+  statement: |
+    ∀ M j n d → 0ℚᵘ ≤ℚ bhScale M j (+ n) d
+    (the scaled value of a non-negative p-value is non-negative, in the
+    `bhScale` form with the denominator expanded)
+  status: OPEN for `bhScale`; CLOSED for the product form by
+    `StepUp.scale-≥` (`0 ≤ p → p ≤ scale m k p`, which with `0 ≤ p` gives
+    `0 ≤ scale m k p` by `≤-trans`), under the rank bound `suc k ≤ m`.
+  why: |
+    `+ M * + n` does not reduce to `+ (M ℕ.* n)`; `ℤ._*_` unfolds to a
+    sign-times-absolute-value form, and the non-negativity lemmas in
+    `Data.Integer.Properties` are stated about the reduced form.  The StepUp
+    module avoids the obstacle by keeping the scaling as a `ℚᵘ` product
+    (`p * mkℚᵘ (+ m) k`) and using `*-monoʳ-≤-nonNeg` with a `NonNegative`
+    instance built from the `0 ≤ p` hypothesis.
+  impact: LOW.  A negative q-value would need a negative p-value, which
+    `bh_adjust` refuses with an `ArgumentError`.
+  closes-with: |
+    `scale-is-bhScale : scale m k (mkℚᵘ n d) ≃ bhScale m k n d`
+    (a `*-comm`/`+-comm` rearrangement of the denominator), after which
+    R-BH-1 follows from `scale-≥` without the rank bound being needed for
+    non-negativity alone.
+
+R-BH-2
+  statement: |
+    The BH step-up running minimum: adjusted values are ≤ 1, descending in
+    rank, ≥ the raw p-value, and monotone (p_i ≤ p_j ⇒ q_i ≤ q_j) including
+    across ties.
+  status: CLOSED (by `StepUp.adjust-≤1`, `StepUp.adjust-descending`,
+    `StepUp.adjust-≥`, `StepUp.adjust-monotone`, and at original indices by
+    `StepUp.Unsorted.bh-≤1`, `StepUp.Unsorted.bh-≥`,
+    `StepUp.Unsorted.bh-monotone`)
+  why: n/a
+  impact: n/a
+  closes-with: n/a
+
+R-BH-3
+  statement: |
+    `ord = sortperm(q; rev = true)` returns a permutation π such that the
+    sorted sequence is descending (`Linked _≥_ sorted` in
+    `StepUp.Unsorted`).
+  status: NOT ATTEMPTED (named assumption)
+  why: |
+    `sortperm` is not re-implemented in Agda.  Every `Unsorted` theorem takes
+    `Linked _≥_ sorted` as an explicit hypothesis and so says: IF π sorts
+    descending THEN the property holds at the original indices.  That
+    Julia's `sortperm` with `rev = true` produces such a π is tested, not
+    proved.
+  impact: |
+    LOW.  `sortperm` is Base Julia and the property test
+    `test/property_bh.jl` evaluates the end-to-end result at the original
+    indices.
+  closes-with: |
+    A verified sort (e.g. insertion sort with a `Linked _≥_` output proof and
+    a permutation witness) substituted for π.  Not planned.
+
+R-BH-4
+  statement: |
+    Every p-value handed to the step-up lies in [0, 1].
+  status: DISCHARGED BY A JULIA REFUSAL (not proved)
+  why: |
+    `bh_adjust` raises `ArgumentError` for any finite value outside [0, 1]
+    before the loop runs.  The Agda hypotheses `All (0ℚᵘ ≤_)` and
+    `All (_≤ 1ℚᵘ)` are exactly what that guard establishes.  The guard
+    itself is tested, not proved.
+  impact: |
+    The hypotheses are load-bearing: without `0 ≤ p` the scaling runs the
+    wrong way and `adjust-monotone` fails; without `p ≤ 1` the initial
+    `running = 1` undercuts the largest p-value and `adjust-≥` fails.
+  closes-with: n/a (a Julia-side guard cannot be proved in Agda).
+
+R-BH-5
+  statement: |
+    NaN entries are excluded before the step-up and remain NaN afterwards;
+    `m` is the count of non-NaN entries.
+  status: OUT OF SCOPE
+  why: |
+    `ℚᵘ` has no NaN.  The Agda model is the loop over the NaN-free vector,
+    with `m` its length.  The exclusion and the write-back are Julia code,
+    tested by `prop_bh_monotone` (which asserts NaN-in ⇒ NaN-out).
+  impact: LOW.
+  closes-with: n/a
+
+R-BH-6
+  statement: |
+    The floating-point `bh_adjust` agrees with the exact `adjust` to within
+    the `1e-15` tolerance the property test uses.
+  status: OUT OF SCOPE
+  why: |
+    IEEE-754 semantics are not modelled.  `q[k] * m / rank` in Float64 is a
+    rounding of `scale m k p`; the tolerance in `test/properties.jl` is the
+    test's allowance for that, not a proved bound.
+  impact: MEDIUM in principle; bounded by the property test and the planted
+    `mutant_bh_no_cummin`.
+  closes-with: A verified floating-point model.  Not planned.
+
+R-BH-7
+  statement: |
+    The q-values control the false discovery rate at the nominal level.
+  status: OUT OF SCOPE
+  why: |
+    FDR control is a theorem about a probability measure over a sampling
+    model.  This development is about exact rational arithmetic.  Nothing in
+    `proofs/` bears on it, and `proofs/PROOF-STATUS.md` says so in its own
+    words.
+  impact: n/a (the claim is not made).
+  closes-with: n/a
