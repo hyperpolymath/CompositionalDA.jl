@@ -20,3 +20,21 @@ function mutant_bh_no_cummin(p)
     for (r, k) in enumerate(ord); q[k] = min(1.0, p[idx][k] * m / r); end
     out[idx] = q; out
 end
+
+"""Mutant: instances are log-proportions without centring. Breaks P3."""
+function mutant_instances_uncentred(rng, counts)
+    inst = CompositionalDA.dirichlet_clr_instances(rng, counts; mc_samples = 8)
+    inst .+ reshape(1:size(inst, 1), :, 1, 1)
+end
+
+"""Mutant: draws fresh effect-size pairings per feature, so the effect depends
+on feature position. Breaks P6."""
+function mutant_aldex2_per_feature_pairs(inst, i1, i2; rng)
+    t = CompositionalDA.aldex2_from_instances(inst, i1, i2; rng)
+    n1 = length(i1) * size(inst, 3); n2 = length(i2) * size(inst, 3)
+    for j in 1:size(inst, 2)
+        p = CompositionalDA.effect_pairs(rng, n1, n2, max(n1, n2))
+        t.effect[j] = CompositionalDA.aldex2_effect(p, vec(inst[i1, j, :]), vec(inst[i2, j, :]))[1]
+    end
+    t
+end

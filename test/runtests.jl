@@ -17,4 +17,5 @@ include("mutants.jl")
     include("unit_core.jl")
     include("property_clr.jl")
     include("property_bh.jl")
+    include("property_aldex2.jl")
 end

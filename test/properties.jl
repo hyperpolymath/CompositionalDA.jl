@@ -47,3 +47,33 @@ prop_bh_monotone(f; seed = 5) = all(pvectors(seed)) do p
         all(q[ok] .>= p[ok] .- 1e-15) && all(q[ok] .<= 1) &&
         all(q[i] <= q[j] + 1e-15 for i in ok, j in ok if p[i] <= p[j])
 end
+
+"""Random count matrices (samples × features) with two groups of ≥ 3 samples."""
+function count_tables(seed; n = 8)
+    map(1:n) do k
+        r = StableRNG(seed + k)
+        s = rand(r, 6:10); d = rand(r, 3:12)
+        x = rand(r, 0:200, s, d); x[:, 1] .+= 1
+        g = vcat(fill("a", s ÷ 2), fill("b", s - s ÷ 2))
+        (x, g)
+    end
+end
+
+"""P3: every Monte-Carlo instance from generator `f(rng, counts)` is a CLR:
+each instance row sums to zero, and is unchanged when a sample's counts are
+replicated across a constant column offset in log space (closure cancels)."""
+prop_instances_are_clr(f; seed = 7) = all(count_tables(seed)) do (x, _)
+    inst = f(StableRNG(seed), x)
+    all(abs.(sum(inst; dims = 2)) .< 1e-9)
+end
+
+"""P6: given fixed instances, relabelling the features permutes every output
+column of estimator `f(inst, i1, i2; rng)` identically."""
+prop_aldex2_equivariant(f; seed = 8) = all(count_tables(seed)) do (x, g)
+    inst = CompositionalDA.dirichlet_clr_instances(StableRNG(seed), x; mc_samples = 16)
+    i1 = findall(==("a"), g); i2 = findall(==("b"), g)
+    σ = randperm(StableRNG(seed + size(x, 2)), size(x, 2))
+    t = f(inst, i1, i2; rng = StableRNG(seed))
+    tσ = f(inst[:, σ, :], i1, i2; rng = StableRNG(seed))
+    all(isapprox(Matrix(tσ), Matrix(t)[σ, :]; atol = 1e-12))
+end
