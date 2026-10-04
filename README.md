@@ -4,17 +4,20 @@
 # CompositionalDA.jl
 
 Native-Julia compositional differential abundance for microbiome count tables.
-Methods: ALDEx2 and ANCOM-BC. Multinomial and Dirichlet-multinomial regression
+Methods (implemented / planned): ALDEx2 is implemented natively (`src/Methods/ALDEx2.jl`);
+ANCOM-BC is planned for v0.3 (not yet in `src/`). Multinomial and Dirichlet-multinomial regression
 live in a separate package,
 [`CompositionalCounts.jl`](https://github.com/hyperpolymath/CompositionalCounts.jl).
 It needs no Python and no TensorFlow. R is needed only for the optional reference
 backend.
 
-> **Status: v0.2.0.** The core layer (closure, the centred log-ratio, zero
-> policies, Benjamini–Hochberg, result/provenance types) and two-group ALDEx2
-> (`aldex2`) are implemented. ALDEx2 is defined by `docs/ALDEx2-SPEC.md` and
-> agrees with Bioconductor ALDEx2 1.42.0 within Monte-Carlo noise on the mock,
-> gut and soil datasets. ANCOM-BC lands in v0.3.
+> **Status: v0.2.0.** Implemented: the core layer (closure, centred log-ratio,
+> zero policies, Benjamini–Hochberg, result/provenance types) and two-group
+> ALDEx2 (`aldex2`). ALDEx2 is defined by `docs/ALDEx2-SPEC.md` and agrees
+> with Bioconductor ALDEx2 1.42.0 within Monte-Carlo noise on the mock, gut
+> and soil datasets. Planned: ANCOM-BC lands in v0.3; the optional R reference
+> backend (`ext/CompositionalDARCallExt.jl`) will call Bioconductor ALDEx2/
+> ANCOMBC through RCall, shipped as a Julia package extension.
 > Nothing here claims a method that is not yet in `src/`.
 
 ## Input contract
