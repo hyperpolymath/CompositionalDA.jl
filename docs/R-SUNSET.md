@@ -12,8 +12,9 @@ present) is a bridge, not a product. It never owns R state. Every R call runs in
 caller-supplied `runner` function, so a host application keeps its own R session
 and lock (MetaManifold passes its `with_r_lock`).
 
-**Criterion.** For each method, once the native implementation agrees with the R
-reference within the tolerances stated in `test/oracle/runoracle.jl` on all three
+**Criterion.** For each implemented method (currently ALDEx2; ANCOM-BC is
+planned for v0.3), once the native implementation agrees with the R reference
+within the tolerances stated in `test/oracle/runoracle.jl` on all three
 reference datasets (mock, gut, soil) for **two consecutive releases**, that
 method's R path is marked deprecated in the next release and receives no
 further maintenance. When no method still needs it, the extension is deleted.
