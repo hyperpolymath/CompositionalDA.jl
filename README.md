@@ -78,6 +78,9 @@ natively is not speed: it is that `proofs/PROOF-STATUS.md` lets a review answer
 *"is this safe and sound, or can it produce funny results?"* claim by claim --
 each CLR property is either proved under `--safe` or marked tested, so a
 pipeline maintainer adopts exactly as much certainty as the method carries,
-instead of borrowing all of it from a paper. The Bioconductor implementations
-stay in CI as oracles, which is the difference between "validated against the
-reference" and "hoped to match".
+instead of borrowing all of it from a paper. The Bioconductor oracle in CI
+today is ALDEx2 -- the difference between "validated against the
+reference" and "hoped to match" for the method it covers. ANCOM-BC's
+reference oracle remains planned; until it lands, ANCOM-BC carries the
+package's own tests, not a cross-check against the Bioconductor
+implementation.
