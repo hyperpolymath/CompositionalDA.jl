@@ -66,3 +66,18 @@ proofs/check.sh                                   # Debian 13: apt install agda 
 
 Code: MPL-2.0. Documentation: CC-BY-SA-4.0. Per-file SPDX headers are
 authoritative.
+
+## Applications in practice
+
+The concrete target is MetaManifold's Differential Abundance tab
+([JoshuaJewell/MetaManifold-WebUI](https://github.com/JoshuaJewell/MetaManifold-WebUI),
+proposed as [issue #23](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/23)),
+which today fits each taxon with a negative-binomial GLM or a Welch t-test on
+CLR values through R. The real-world value of doing the compositional methods
+natively is not speed: it is that `proofs/PROOF-STATUS.md` lets a review answer
+*"is this safe and sound, or can it produce funny results?"* claim by claim --
+each CLR property is either proved under `--safe` or marked tested, so a
+pipeline maintainer adopts exactly as much certainty as the method carries,
+instead of borrowing all of it from a paper. The Bioconductor implementations
+stay in CI as oracles, which is the difference between "validated against the
+reference" and "hoped to match".
