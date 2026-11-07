@@ -18,4 +18,7 @@ include("mutants.jl")
     include("property_clr.jl")
     include("property_bh.jl")
     include("property_aldex2.jl")
+    include("boundary_aldex2.jl")
+    include("method_ancombc.jl")
+    include("posterior_aggregation.jl")
 end

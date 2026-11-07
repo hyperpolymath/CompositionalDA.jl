@@ -185,6 +185,12 @@ expect_reject "stepup: monotonicity reversed" run_gate "$NAMESPACE/BenjaminiHoch
 expect_reject "stepup: scale written as rank/m" run_gate "$NAMESPACE/BenjaminiHochberg/StepUp.agda" \
   'sed -i "s|^scale m k p = p \* mkℚᵘ (+ m) k|scale m k p = p * mkℚᵘ (+ suc k) m|" "$1"'
 
+expect_reject "posterior: minimum replaced by maximum" run_gate "$NAMESPACE/PosteriorP.agda" \
+  'sed -i "s|sum (zipWith _⊓_ xs ys) ≤ (sum xs ⊓ sum ys)|sum xs ≤ (sum xs ⊓ sum ys)|" "$1"'
+
+expect_reject "bias: correction adds bias instead of subtracting" run_gate "$NAMESPACE/BiasModel.agda" \
+  'sed -i "s|((μ - ν) + δ) - δ ≈ μ - ν|((μ - ν) + δ) + δ ≈ μ - ν|" "$1"'
+
 # --- the axiom audit must reject an unchecked or unsound module -------------
 
 expect_reject "audit: module dropped from the gate entry" run_audit "$NAMESPACE/All.agda" \

@@ -41,6 +41,28 @@ The exact commands, exit codes and counts of the most recent run are in
 
 ## What is proved
 
+### Additional method identities (v0.3 development)
+
+`CompositionalDA.PosteriorP` proves over exact rationals that the sum of
+elementwise minima is bounded above by each separate sum, hence their minimum
+(`consistent-sign-bound`). This is finite algebra behind ALDEx2's directional
+aggregation, not p-value calibration. `test/posterior_aggregation.jl` mirrors
+it and supplies a strict counterexample to averaging per-instance minima.
+Division by a common positive Monte-Carlo count is not separately formalised.
+
+`CompositionalDA.BiasModel`, parameterised by a commutative ring, proves
+`observational-shift` (opposite abundance/sampling shifts leave their sum
+unchanged), `bias-cancellation` (subtracting the supplied bias removes it) and
+`residual-bias` (an estimate leaves exactly the bias estimation error).
+
+These statements have no postulates. They do not discharge statistical
+identification assumptions, verify a mixture optimiser, establish its global
+convergence, prove the floating-point implementation equivalent or establish
+calibration/FDR control. New mutation controls require rejection of an invalid
+aggregation bound and addition of bias where subtraction was required. See
+`docs/ANCOMBC-SPEC.md`. Historical receipts below cover their named source
+versions only; a new release requires a fresh complete gate run.
+
 Every module is reachable from `proofs/agda/CompositionalDA/All.agda`.
 
 ### P1 — the centred log-ratio transform

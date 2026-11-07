@@ -4,21 +4,18 @@
 # CompositionalDA.jl
 
 Native-Julia compositional differential abundance for microbiome count tables.
-Methods (implemented / planned): ALDEx2 is implemented natively (`src/Methods/ALDEx2.jl`);
-ANCOM-BC is planned for v0.3 (not yet in `src/`). Multinomial and Dirichlet-multinomial regression
+Methods: ALDEx2 (`src/Methods/ALDEx2.jl`) and the original two-group ANCOM-BC
+model (`src/Methods/ANCOMBC.jl`). Multinomial and Dirichlet-multinomial regression
 live in a separate package,
 [`CompositionalCounts.jl`](https://github.com/hyperpolymath/CompositionalCounts.jl).
 It needs no Python and no TensorFlow. R is needed only for the optional reference
 backend.
 
-> **Status: v0.2.0.** Implemented: the core layer (closure, centred log-ratio,
-> zero policies, Benjamini–Hochberg, result/provenance types) and two-group
-> ALDEx2 (`aldex2`). ALDEx2 is defined by `docs/ALDEx2-SPEC.md` and agrees
-> with Bioconductor ALDEx2 1.42.0 within Monte-Carlo noise on the mock, gut
-> and soil datasets. Planned: ANCOM-BC lands in v0.3; the optional R reference
-> backend (`ext/CompositionalDARCallExt.jl`) will call Bioconductor ALDEx2/
-> ANCOMBC through RCall, shipped as a Julia package extension.
-> Nothing here claims a method that is not yet in `src/`.
+> **Status: v0.3 development.** Native implementations and reference adapters
+> exist. Release and integration are gated by `docs/ISSUE-23-ACCEPTANCE.md`;
+> implementation is not a declaration of reference conformance. The ALDEx2
+> gate now checks all statistics and shared Monte-Carlo instances. ANCOM-BC's
+> precise model and limitations are described in `docs/ANCOMBC-SPEC.md`.
 
 ## Input contract
 
@@ -43,15 +40,16 @@ a planted mutant (`test/mutants.jl`). The Benjamini–Hochberg step-up (P5: q �
 q ≤ 1, order-preserving, at the original indices) is proved over exact
 rationals, assuming the input was sorted correctly; the sort itself is not
 verified, and nothing about floating point is proved. Statistical properties such as calibration,
-consistency and FDR control are **not** proved. They are to be tested against
-the R reference implementations; that oracle is not built yet. The full table is in
+consistency and FDR control are **not** proved. R reference comparisons are
+numerical checks, not proofs of those properties. PosteriorP and BiasModel
+add finite aggregation and bias identities. The full table is in
 [`proofs/PROOF-STATUS.md`](proofs/PROOF-STATUS.md).
 
 ## The R bridge is temporary by design
 
-**Planned, not yet in the tree.** The optional reference backend will call
+The optional reference backend calls
 Bioconductor ALDEx2/ANCOMBC through RCall, shipped as a Julia package extension.
-It will exist for two purposes: to serve as
+It exists for two purposes: to serve as
 the test oracle, and to help researchers move off R. It has a written sunset
 criterion; see [`docs/R-SUNSET.md`](docs/R-SUNSET.md).
 
@@ -78,9 +76,8 @@ natively is not speed: it is that `proofs/PROOF-STATUS.md` lets a review answer
 *"is this safe and sound, or can it produce funny results?"* claim by claim --
 each CLR property is either proved under `--safe` or marked tested, so a
 pipeline maintainer adopts exactly as much certainty as the method carries,
-instead of borrowing all of it from a paper. The Bioconductor oracle in CI
-today is ALDEx2 -- the difference between "validated against the
-reference" and "hoped to match" for the method it covers. ANCOM-BC's
-reference oracle remains planned; until it lands, ANCOM-BC carries the
-package's own tests, not a cross-check against the Bioconductor
-implementation.
+instead of borrowing all of it from a paper. CI includes separate
+Bioconductor comparisons for ALDEx2 and the original two-group ANCOM-BC.
+The tests' existence is not evidence that they pass: the release receipt
+must identify the source revision, reference versions and actual outcomes.
+See `docs/ISSUE-23-ACCEPTANCE.md` for the independent release gates.

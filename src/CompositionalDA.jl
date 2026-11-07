@@ -5,8 +5,8 @@
     CompositionalDA
 
 Compositional differential-abundance methods for count tables, implemented
-natively in Julia. Implemented: ALDEx2 (native `aldex2`). Planned: ANCOM-BC
-(v0.3, not yet in `src/`). Input is always a table of raw integer counts with
+natively in Julia: ALDEx2 (`aldex2`) and original two-group ANCOM-BC (`ancombc`).
+See the method specifications and acceptance gates. Input is raw integer counts with
 samples as rows and features (taxa) as columns.
 
 The core layer is exported: closure, the centred log-ratio, zero policies,
@@ -30,6 +30,7 @@ include("Core/composition.jl")
 include("Core/bh.jl")
 include("Core/result.jl")
 include("Methods/ALDEx2.jl")
+include("Methods/ANCOMBC.jl")
 
 export CompositionError
 export ZeroPolicy, RefuseZeros, Pseudocount, MultiplicativeReplacement, replace_zeros
@@ -37,5 +38,6 @@ export validate_counts, closure, clr
 export bh_adjust
 export Provenance, DAResult
 export aldex2, aldex2_reference, dirichlet_clr_instances
+export ancombc, ancombc_reference
 
 end # module

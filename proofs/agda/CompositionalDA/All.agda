@@ -16,3 +16,5 @@ import CompositionalDA.CLR
 import CompositionalDA.CLR.Instance
 import CompositionalDA.BenjaminiHochberg
 import CompositionalDA.BenjaminiHochberg.StepUp
+import CompositionalDA.PosteriorP
+import CompositionalDA.BiasModel
