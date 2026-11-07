@@ -39,8 +39,14 @@ job means the experiment completed, not that the adverse calibration passed.
 
 <!-- coderabbit-ai-generated-section:v1:293a501349b835ccb7aa6a0ef06715bbeee5f83376f52e981bd78fa617317411 -->
 
-The workflow requests 30 days of artifact retention; repository policy may
-shorten that period. Reviewers should check the actual expiry before archiving
-the raw artifact with its SHA-256 for a release decision.
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:782763b315c6b798efa73f3b136076ffe1bc009ef35e82ac28614d5de8ad0002 -->
+
+The workflow requests 30 days of artifact retention, but repository policy
+may shorten it. Check the artifact expiry and archive it with its SHA-256
+before using it in a release decision.
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 <!-- /coderabbit-ai-generated:v1 -->
