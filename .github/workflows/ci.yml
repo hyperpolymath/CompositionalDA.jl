@@ -90,6 +90,7 @@ jobs:
             if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
             BiocManager::install(version = "3.22", ask = FALSE, update = FALSE)
             p <- Sys.getenv("REFERENCE_PACKAGE")
+            if (p == "ANCOMBC" && !requireNamespace("phyloseq", quietly = TRUE)) BiocManager::install("phyloseq", ask = FALSE, update = FALSE)
             if (!requireNamespace(p, quietly = TRUE)) BiocManager::install(p, ask = FALSE, update = FALSE)
             stopifnot(packageVersion(p) == Sys.getenv("REFERENCE_VERSION"))
             if (p == "ANCOMBC") stopifnot(packageVersion("CVXR") == "1.0.15")

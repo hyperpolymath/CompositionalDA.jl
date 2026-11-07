@@ -19,7 +19,9 @@ asymptotic calibration. All-zero taxa and taxa below `prevalence` are removed
 and named in provenance. At least four tested taxa must remain; this is a
 computational refusal rule, not a sufficient statistical sample size.
 
-Structural absence is determined separately in each group from zero
+Both native and reference APIs default to `structural_zeros=false`, matching
+the reference method. With `structural_zeros=true`, structural absence is
+determined separately in each group from zero
 prevalence; `negative_lower_bound=true` additionally uses the published
 normal lower bound. Those decisions have explicit statuses and **no numerical
 p-value**, effect or q-value. They do not enter BH or the bias fit.

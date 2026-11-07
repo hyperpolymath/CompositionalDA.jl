@@ -119,7 +119,7 @@ end
 
 """
     ancombc(counts, features, groups; prevalence = 0.1, pseudocount = 1.0,
-            structural_zeros = true, negative_lower_bound = false,
+            structural_zeros = false, negative_lower_bound = false,
             conserve = true, tolerance = 1e-7, max_iterations = 1000)
 
 Two-group ANCOM-BC (the original 2020 model), on samples × taxa raw counts.
@@ -135,7 +135,7 @@ See `docs/ANCOMBC-SPEC.md` for the exact model and verification boundaries.
 """
 function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
                  groups::AbstractVector; prevalence::Real = 0.1,
-                 pseudocount::Real = 1.0, structural_zeros::Bool = true,
+                 pseudocount::Real = 1.0, structural_zeros::Bool = false,
                  negative_lower_bound::Bool = false, conserve::Bool = true,
                  tolerance::Real = 1e-7, max_iterations::Integer = 1000)
     design = validate_two_groups(counts, features, groups)

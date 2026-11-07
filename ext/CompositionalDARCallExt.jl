@@ -34,7 +34,7 @@ function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, fea
     df = runner() do
         reads = permutedims(Float64.(counts[:, keep]))     # R integers are only 32-bit
         @rput reads
-        conds = design.groups; lv = levels
+        conds = [g == levels[1] ? "0" : "1" for g in design.groups]; lv = ["0", "1"]
         @rput conds lv
         fnames = design.features[keep]; @rput fnames
         R"""
@@ -43,7 +43,8 @@ function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, fea
         colnames(reads) <- paste0("s", seq_len(ncol(reads)))
         # A character vector, not a factor: ALDEx2 1.42 calls round() on conds,
         # which errors for a factor. It builds its own factor, so the level
-        # order is the same sorted order as `lv`.
+        # order is preserved by the explicit 0/1 encoding, even for original
+        # numeric labels such as 2 and 10 whose lexical order differs.
         stopifnot(identical(sort(unique(conds)), lv))
         res <- ALDEx2::aldex(reads, conds, mc.samples = $mc_samples,
                              test = "t", effect = TRUE, denom = "all", verbose = FALSE)
@@ -65,18 +66,19 @@ function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, fea
 end
 
 function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
-    groups::AbstractVector; prevalence::Real=0.1, structural_zeros::Bool=false,
+    groups::AbstractVector; prevalence::Real=0.1, pseudocount::Real=1.0, structural_zeros::Bool=false,
     negative_lower_bound::Bool=false, conserve::Bool=true, tolerance::Real=1e-7,
     max_iterations::Integer=1000, runner=f -> f())
     design = validate_two_groups(counts, features, groups)
     0 <= prevalence < 1 || throw(ArgumentError("prevalence must be in [0,1)"))
+    isfinite(pseudocount) && pseudocount > 0 || throw(ArgumentError("pseudocount must be finite and positive"))
     isfinite(tolerance) && 0 < tolerance < 1 || throw(ArgumentError("tolerance must be in (0,1)"))
     max_iterations > 0 || throw(ArgumentError("max_iterations must be positive"))
     table, version = runner() do
         reads = permutedims(Float64.(counts))
         fnames = design.features
         conds = [g == design.levels[1] ? "reference" : "contrast" for g in design.groups]
-        @rput reads fnames conds prevalence structural_zeros negative_lower_bound conserve tolerance max_iterations
+        @rput reads fnames conds prevalence pseudocount structural_zeros negative_lower_bound conserve tolerance max_iterations
         R"""
         rownames(reads) <- fnames
         colnames(reads) <- paste0("s", seq_len(ncol(reads)))
@@ -85,7 +87,7 @@ function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, fe
         input <- phyloseq::phyloseq(phyloseq::otu_table(reads, taxa_are_rows=TRUE),
                                    phyloseq::sample_data(meta))
         reference <- ANCOMBC::ancombc(data=input, tax_level=NULL, formula="condition",
-            p_adj_method="BH", prv_cut=prevalence, lib_cut=0, group="condition",
+            p_adj_method="BH", pseudo=pseudocount, prv_cut=prevalence, lib_cut=0, group="condition",
             struc_zero=structural_zeros, neg_lb=negative_lower_bound, tol=tolerance,
             max_iter=max_iterations, conserve=conserve, global=FALSE, n_cl=1, verbose=FALSE)
         ref <- reference$res
@@ -98,7 +100,7 @@ function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, fe
         rcopy(DataFrame, R"native_shape"), rcopy(String, R"reference_version")
     end
     return DAResult(table, Provenance(:ancombc, :r_reference;
-        r_package="ANCOMBC $version", prevalence, structural_zeros, negative_lower_bound,
+        r_package="ANCOMBC $version", prevalence, pseudocount, structural_zeros, negative_lower_bound,
         conserve, tolerance, max_iterations,
         contrast="$(design.levels[2]) vs $(design.levels[1])", log_base="e"))
 end

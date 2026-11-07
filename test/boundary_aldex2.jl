@@ -19,6 +19,10 @@
     @test validate_counts(fill(typemax(Int), 2, 2)) == fill(typemax(Int), 2, 2)
 
     baseline = run(x, f, g)
+    numeric = run(x, f, [2, 2, 10, 10])
+    @test numeric.table == baseline.table
+    @test numeric.provenance.parameters[:contrast] == "10 vs 2"
+    @test_throws CompositionError run(x, f, Any[2, 2, "2", "2"])
     withzero = run(hcat(zeros(Int, 4), x), vcat(["absent"], f), g)
     @test withzero.table == baseline.table
     @test withzero.provenance.parameters[:excluded_all_zero] == ["absent"]

@@ -35,7 +35,7 @@
 
     # Structural absence is a separate decision, not a fabricated p-value.
     absent = vcat(zeros(Int, 10), fill(200, 10))
-    withzero = ancombc(hcat(x, absent, zeros(Int, n)), vcat(features, ["absent_a", "absent_all"]), groups)
+    withzero = ancombc(hcat(x, absent, zeros(Int, n)), vcat(features, ["absent_a", "absent_all"]), groups; structural_zeros=true)
     row = withzero.table[end, :]
     @test row.status == "structural_zero"
     @test row.structural_zero_group1 && !row.structural_zero_group2
