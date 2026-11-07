@@ -3,6 +3,7 @@
 include("calibration_pilot.jl")
 destination=only(ARGS)
 mkpath(destination)
+save_run_environment(destination)
 for replicate in 1:32
     x,features,groups,truth=simulate(REGIMES[3],20261107+30000+replicate)
     open(joinpath(destination,"replicate-$replicate.tsv"),"w") do io

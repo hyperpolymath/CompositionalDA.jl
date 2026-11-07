@@ -4,6 +4,8 @@ using BenchmarkTools, CompositionalDA, Statistics, TOML, Dates
 include("calibration_pilot.jl")
 destination=only(ARGS)
 mkpath(destination)
+provenance=source_provenance(pkgdir(CompositionalDA);require_clean=true)
+save_run_environment(destination)
 rows=NamedTuple[]
 for (n,d) in ((20,40),(20,400),(100,400))
     regime=(name="benchmark",n1=n÷2,n2=n÷2,depth1=10000,depth2=10000,sd=.35,sparse=false,signals=4)
@@ -35,7 +37,7 @@ open(joinpath(destination,"benchmarks.csv"),"w") do io
 end
 metadata=Dict("julia"=>string(VERSION),"threads"=>Threads.nthreads(),"cpu"=>Sys.CPU_NAME,
     "machine"=>Sys.MACHINE,"word_size"=>Sys.WORD_SIZE,"date_utc"=>string(now(UTC)),
-    "source_head"=>strip(read(`git -C $(@__DIR__) rev-parse HEAD`,String)),
     "benchmarktools"=>string(pkgversion(BenchmarkTools)),"warmup_excluded"=>true,
     "claim"=>"exploratory warm-process baseline; no reference speedup or acceptance budget")
+merge!(metadata,provenance)
 open(io->TOML.print(io,metadata),joinpath(destination,"benchmarks-metadata.toml"),"w")

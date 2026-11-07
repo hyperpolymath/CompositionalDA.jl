@@ -45,10 +45,11 @@ Do not fix it by tuning the pilot seeds, removing adverse regimes or quietly
 substituting another method.
 
 ALDEx2's pilot is much less adverse, but 32 datasets cannot certify 5% FDR.
-All-null FDR is the probability of any rejection. With signal present, that
-probability is family-wise error; mean false discovery proportion estimates
-FDR instead. The reported Wilson intervals are for event probabilities, not
-mean FDP, taxa treated as independent replications, or arbitrary populations.
+All-null FDR is the probability of any rejection. With signal present,
+family-wise error is the probability of at least one false rejection; mean
+false discovery proportion estimates FDR. The reported Wilson intervals are
+for event probabilities, not mean FDP, taxa treated as independent
+replications, or arbitrary populations.
 
 At only two ALDEx2 Monte-Carlo instances, a separate 4,096-seed probe produced
 58 infinite and three undefined effect estimates. Its p/q bounds still held.

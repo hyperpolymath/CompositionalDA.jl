@@ -4,6 +4,7 @@
 using CompositionalDA, Random, Statistics, Dates, Printf, SHA, TOML
 using CompositionalDA: StableRNG
 using Distributions: Multinomial
+include("run_environment.jl")
 
 const REGIMES = [
     (name="balanced_null",n1=10,n2=10,depth1=10000,depth2=10000,sd=0.35,sparse=false,signals=0),
@@ -40,13 +41,15 @@ end
 
 function run_pilot(destination)
     mkpath(destination)
+    provenance=source_provenance(pkgdir(CompositionalDA))
+    save_run_environment(destination)
     protocol=joinpath(@__DIR__,"..","docs","CALIBRATION-PILOT-PROTOCOL.adoc")
     metadata=Dict("protocol_sha256"=>bytes2hex(sha256(read(protocol))),
         "julia"=>string(VERSION),"package_version"=>string(pkgversion(CompositionalDA)),
-        "source_head"=>strip(read(`git -C $(@__DIR__) rev-parse HEAD`,String)),
         "started_utc"=>string(now(UTC)),"replicates_per_regime"=>32,
         "mc_samples"=>128,"seed_formula"=>"20261107 + 10000*regime_index + replicate",
         "status"=>"exploratory pilot; not a calibration certificate")
+    merge!(metadata,provenance)
     records=NamedTuple[]
     failures=NamedTuple[]
     for (regime_index,regime) in enumerate(REGIMES), replicate in 1:32
