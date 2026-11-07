@@ -26,7 +26,7 @@ Machine-checked proofs for CompositionalDA.jl, in **Agda 2.6.4.3** with
 | Gate | Command | Result |
 | --- | --- | --- |
 | Type-check every proof, audit, then self-test | `proofs/check.sh` | PASS — exit 0, no warnings |
-| Axiom audit on its own | `proofs/tests/axiom-audit.sh` | PASS — 7/7 modules reachable from `CompositionalDA.All`, no postulates, no FFI, no unsound flags, no holes, all `--safe` |
+| Axiom audit on its own | `proofs/tests/axiom-audit.sh` | PASS — 9/9 modules reachable from `CompositionalDA.All` at the v0.3 receipt below, no postulates, no FFI, no unsound flags, no holes, all `--safe` |
 | Gate self-test (does the gate reject anything?) | `proofs/tests/gate-selftest.sh` | PASS — see "Last verified" below for the count |
 
 The CI job `proofs` in `.github/workflows/ci.yml` runs `proofs/check.sh` in a
@@ -255,6 +255,17 @@ into the toolchain's data directory. **An absent prover is a failure, never a
 skip** — in CI and locally alike.
 
 ## Last verified
+
+### v0.3 development, 2026-11-07
+
+At source `bace2e6454dcf4977f8ab3dcf9ab0eb276403455`, the
+[pinned proof job](https://github.com/hyperpolymath/CompositionalDA.jl/actions/runs/42396769228/job/128475707706)
+passed: nine reachable modules, a clean axiom audit, full type checking and
+20/20 gate controls. The Julia 1.10 and 1.12.5 jobs each passed 202 assertions,
+including Aqua. The separate ANCOM-BC reference gate failed; these proof and
+unit-test results do not qualify that revision for release.
+
+### Historical v0.2 receipt
 
 2026-10-02, after rebasing onto PR #2 (`320513d`, which added `StepUp` and
 the 18-control self-test), one run of the CI interface with Debian 13's

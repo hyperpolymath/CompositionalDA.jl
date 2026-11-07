@@ -17,6 +17,12 @@ backend.
 > gate now checks all statistics and shared Monte-Carlo instances. ANCOM-BC's
 > precise model and limitations are described in `docs/ANCOMBC-SPEC.md`.
 
+The v0.3 implementation, tests, proofs and integration work were developed
+with OpenAI Codex assistance. General registration requires a human maintainer
+to review and understand these contributions; automated checks and code review
+do not replace that review. Verification scope is recorded in
+`proofs/PROOF-STATUS.md` and `docs/ISSUE-23-ACCEPTANCE.md`.
+
 ## Input contract
 
 Raw integer counts, as a samples × features matrix. Normalised or transformed

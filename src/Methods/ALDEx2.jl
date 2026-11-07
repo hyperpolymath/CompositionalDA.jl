@@ -189,8 +189,8 @@ sample's condition against the other. The result has the columns `feature`,
 `effect`, `pvalue`/`qvalue` (consistent-sign expected Welch p and expected BH),
 `wi_pvalue`/`wi_qvalue` (Wilcoxon), `diff_btw`, `diff_win` and `rab_all`.
 
-Deterministic for a fixed `seed` (StableRNG). Calibration is tested against the
-Bioconductor reference, not proved.
+Deterministic for a fixed `seed` (StableRNG). Numerical agreement is tested
+against the Bioconductor reference. This is not a proof of calibration.
 """
 function aldex2(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
                 groups::AbstractVector; mc_samples::Integer = 128, seed::Integer = 1)

@@ -65,6 +65,17 @@ function mixture_responsibilities(x, v, centres, extra, mixing)
     return weights ./ total, sum(maxima .+ log.(total))
 end
 
+function ancombc_wls(x, v, centres, extra, mixing)
+    # The reference WLS approximation assigns lower/upper tails by the fitted
+    # component proportions. These are not maximum-posterior classifications.
+    lower, upper = quantile(x, [mixing[1], 1 - mixing[3]])
+    classes = [value < lower ? 1 : value >= upper ? 3 : 2 for value in x]
+    weights = [1 / (v[i] + extra[classes[i]]) for i in eachindex(x)]
+    shifts = centres .- centres[2]
+    return (; wls = sum(weights .* (x .- shifts[classes])) / sum(weights),
+            variance = 1 / sum(weights), classes)
+end
+
 function ancombc_bias(x, v; tolerance = 1e-7, max_iterations = 1000)
     length(x) >= 4 || throw(CompositionError("ANCOM-BC requires at least four estimable taxa"))
     all(z -> isfinite(z) && z > 0, v) || throw(CompositionError("ANCOM-BC has a zero or non-finite variance; no result produced"))
@@ -103,12 +114,9 @@ function ancombc_bias(x, v; tolerance = 1e-7, max_iterations = 1000)
             throw(CompositionError("ANCOM-BC likelihood decreased; no result produced"))
         change = maximum(abs.(vcat(centres-oldcentres, extra-oldextra, mixing-oldmixing)))
         if abs(next_likelihood - likelihood) <= tolerance * (1 + abs(likelihood)) &&
-                change <= sqrt(tolerance) * (1 + maximum(abs, centres))
-            classes = [argmax(@view next_resp[i, :]) for i in eachindex(x)]
-            weights = [1 / (v[i] + extra[classes[i]]) for i in eachindex(x)]
-            shifts = centres .- centres[2]
-            wls = sum(weights .* (x .- shifts[classes])) / sum(weights)
-            return (; bias = centres[2], wls, variance = 1 / sum(weights),
+                change <= tolerance * (1 + maximum(abs, vcat(centres, extra, mixing)))
+            uncertainty = ancombc_wls(x, v, centres, extra, mixing)
+            return (; bias = centres[2], wls = uncertainty.wls, variance = uncertainty.variance,
                     iterations = iteration, likelihood = next_likelihood,
                     mixing, centres, extra)
         end
@@ -119,7 +127,7 @@ end
 
 """
     ancombc(counts, features, groups; prevalence = 0.1, pseudocount = 1.0,
-            structural_zeros = true, negative_lower_bound = false,
+            structural_zeros = false, negative_lower_bound = false,
             conserve = true, tolerance = 1e-7, max_iterations = 1000)
 
 Two-group ANCOM-BC (the original 2020 model), on samples × taxa raw counts.
@@ -135,7 +143,7 @@ See `docs/ANCOMBC-SPEC.md` for the exact model and verification boundaries.
 """
 function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
                  groups::AbstractVector; prevalence::Real = 0.1,
-                 pseudocount::Real = 1.0, structural_zeros::Bool = true,
+                 pseudocount::Real = 1.0, structural_zeros::Bool = false,
                  negative_lower_bound::Bool = false, conserve::Bool = true,
                  tolerance::Real = 1e-7, max_iterations::Integer = 1000)
     design = validate_two_groups(counts, features, groups)
@@ -171,7 +179,9 @@ function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
     fit = ancombc_bias(moments.difference, moments.variance; tolerance, max_iterations)
     d = length(kept)
     effect, se, statistic, p = (fill(NaN, d) for _ in 1:4)
-    effect[tested] = moments.difference .- (conserve ? fit.wls : fit.bias)
+    # The reference API's conserve option changes the uncertainty estimate,
+    # not the fitted coefficient. WLS supplies the bias-variance approximation.
+    effect[tested] = moments.difference .- fit.bias
     se[tested] = sqrt.(moments.variance) .+ (conserve ? sqrt(fit.variance) : 0.0)
     statistic[tested] = effect[tested] ./ se[tested]
     p[tested] = 2 .* ccdf.(Normal(), abs.(statistic[tested]))
@@ -184,7 +194,7 @@ function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
         tolerance, max_iterations, excluded_features = design.features[.!keep],
         bias = fit.bias, bias_wls = fit.wls, bias_variance = fit.variance,
         iterations = fit.iterations, log_likelihood = fit.likelihood,
-        mixture_weights = fit.mixing, p_adjust = "BH")
+        mixture_weights = fit.mixing, bias_classification = "mixture-weight-quantiles", p_adjust = "BH")
     return DAResult(table, provenance)
 end
 

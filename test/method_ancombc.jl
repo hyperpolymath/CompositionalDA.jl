@@ -2,6 +2,18 @@
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 @testset "ANCOM-BC original two-group model" begin
+    @testset "WLS mixture-proportion classes and boundary ties" begin
+        uncertainty = CompositionalDA.ancombc_wls([-2., -1, 0, 1, 2], ones(5),
+            [-1., 0, 2], [1., 0, 3], [0.2, 0.6, 0.2])
+        @test uncertainty.classes == [1, 2, 2, 2, 3]
+        @test uncertainty.wls ≈ -2/15
+        @test uncertainty.variance ≈ 4/15
+        tied = CompositionalDA.ancombc_wls([-1., -1, 0, 1, 1], ones(5),
+            [-1., 0, 2], [1., 0, 3], [0.25, 0.5, 0.25])
+        @test tied.classes == [2, 2, 2, 3, 3]
+        @test tied.wls ≈ -5/7
+        @test tied.variance ≈ 2/7
+    end
     @testset "equations 6 and 14, known answer and nuisance offsets" begin
         y = [1.0 3 5 7; 3 1 7 5; 2 5 4 9; 4 3 8 5]
         moments = CompositionalDA.ancombc_moments(y, [1, 2], [3, 4])
@@ -27,6 +39,9 @@
     @test all(result.table.effect[4:5] .< 0)
     @test result.provenance.parameters[:iterations] < 1000
     @test result.table == ancombc(x, features, groups).table
+    ordinary = ancombc(x, features, groups; conserve=false)
+    @test ordinary.table.effect == result.table.effect
+    @test all(result.table.se .>= ordinary.table.se)
 
     perm = reverse(1:d)
     permuted = ancombc(x[:, perm], features[perm], groups)
@@ -35,7 +50,7 @@
 
     # Structural absence is a separate decision, not a fabricated p-value.
     absent = vcat(zeros(Int, 10), fill(200, 10))
-    withzero = ancombc(hcat(x, absent, zeros(Int, n)), vcat(features, ["absent_a", "absent_all"]), groups)
+    withzero = ancombc(hcat(x, absent, zeros(Int, n)), vcat(features, ["absent_a", "absent_all"]), groups; structural_zeros=true)
     row = withzero.table[end, :]
     @test row.status == "structural_zero"
     @test row.structural_zero_group1 && !row.structural_zero_group2

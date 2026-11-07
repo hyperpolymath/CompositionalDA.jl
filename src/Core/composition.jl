@@ -38,9 +38,15 @@ function validate_two_groups(counts, features, groups)
     any(isempty ∘ strip, f) && throw(CompositionError("feature names cannot be empty"))
     any(isempty ∘ strip, g) && throw(CompositionError("group labels cannot be empty"))
     allunique(f) || throw(CompositionError("feature names must be unique"))
-    levels = sort(unique(g))
+    original_levels = try
+        sort(unique(groups))
+    catch
+        throw(CompositionError("group labels must be mutually sortable"))
+    end
+    levels = string.(original_levels)
+    allunique(levels) || throw(CompositionError("distinct group labels must have distinct display names"))
     length(levels) == 2 || throw(CompositionError("exactly two groups are required"))
-    i1, i2 = (findall(==(level), g) for level in levels)
+    i1, i2 = (findall(==(level), groups) for level in original_levels)
     min(length(i1), length(i2)) >= 2 || throw(CompositionError("each group needs at least two samples"))
     return (; features = f, groups = g, levels, i1, i2)
 end
