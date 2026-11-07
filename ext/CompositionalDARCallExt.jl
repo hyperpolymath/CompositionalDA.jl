@@ -84,9 +84,8 @@ function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, fe
         colnames(reads) <- paste0("s", seq_len(ncol(reads)))
         meta <- data.frame(condition=factor(conds, levels=c("reference", "contrast")),
                            row.names=colnames(reads))
-        input <- phyloseq::phyloseq(phyloseq::otu_table(reads, taxa_are_rows=TRUE),
-                                   phyloseq::sample_data(meta))
-        reference <- ANCOMBC::ancombc(data=input, tax_level=NULL, formula="condition",
+        reference <- ANCOMBC::ancombc(data=reads, aggregate_data=reads,
+            meta_data=meta, tax_level=NULL, formula="condition",
             p_adj_method="BH", pseudo=pseudocount, prv_cut=prevalence, lib_cut=0, group="condition",
             struc_zero=structural_zeros, neg_lb=negative_lower_bound, tol=tolerance,
             max_iter=max_iterations, conserve=conserve, global=FALSE, n_cl=1, verbose=FALSE)
