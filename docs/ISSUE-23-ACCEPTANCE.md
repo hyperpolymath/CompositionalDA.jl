@@ -19,6 +19,10 @@ Release requires all of the following, independently:
 4. ANCOM-BC conformance to the declared reference version and settings.
    A failure must remain visible; numerical thresholds cannot be widened
    after observing results to turn disagreement into success.
+   The current qualification uses the explicitly pinned variance-estimator
+   repair documented in `ANCOMBC-SPEC.md`. Unmodified ANCOMBC 2.12.0 has three
+   known soil discrepancies, reproduced as a separate negative control; it
+   is not the passing conformance target. Upstream review remains pending.
 5. A registered Julia release, installable by name/UUID with registry pins.
    Joshua's issue comment explicitly rejects URL-pinned dependencies.
 6. WebUI integration on its current main, a registry-resolved Manifest,

@@ -20,6 +20,21 @@ end
 # Fixed BEFORE examining the comparison results. These are numerical
 # conformance thresholds, not confidence bounds or proofs of calibration.
 const ANCOMBC_TOLERANCE = (effect=0.05, se=0.02, pvalue=0.02, qvalue=0.02)
+const PRISTINE_DEFECT_CONTROL = get(ENV, "ANCOMBC_PRISTINE_DEFECT_CONTROL", "0") == "1"
+if PRISTINE_DEFECT_CONTROL
+    haskey(ENV, "ANCOMBC_ESTIMATOR_SOURCE") && error("the pristine control cannot load a repair")
+    @test rcopy(String, R"as.character(packageVersion('ANCOMBC'))") == "2.12.0"
+    # Exact equal-variance optimum: max(residual^2 - known_variance, 0).
+    # This negative control establishes why the original reference cannot
+    # qualify the native estimator. An unexpected repair must change the gate.
+    R"""
+    boundary_objective <- function(t) -dnorm(1, 0, sqrt(0.99+t), log=TRUE)
+    boundary_result <- nloptr::neldermead(0, boundary_objective, lower=0)$par
+    """
+    @test rcopy(Float64, R"boundary_result") == 0
+    @test rcopy(Bool, R"boundary_objective(0.01) < boundary_objective(boundary_result)")
+    println("KNOWN-DEFECT CONTROL: unmodified ANCOMBC 2.12.0; three soil comparisons are expected failures, not conformance passes")
+end
 # ANCOMBC 2.12.0 silently returns its current parameters at max_iter. Its
 # original 1000-iteration reference run disagreed on soil. Verify convergence
 # explicitly; increasing the work budget is not relaxing numerical tolerances.
@@ -70,7 +85,11 @@ end
         for column in keys(ANCOMBC_TOLERANCE)
             gap = maximum(abs.(native.table[!, column] .- reference.table[Int.(positions), column]))
             println(name, " ANCOM-BC ", column, " maximum error = ", gap)
-            @test gap <= ANCOMBC_TOLERANCE[column]
+            if PRISTINE_DEFECT_CONTROL && name == "soil" && column in (:effect, :pvalue, :qvalue)
+                @test_broken gap <= ANCOMBC_TOLERANCE[column]
+            else
+                @test gap <= ANCOMBC_TOLERANCE[column]
+            end
         end
     end
 end

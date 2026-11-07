@@ -89,7 +89,41 @@ claim or downstream integration is released.**
 
 The reference wrapper allows 20,000 iterations by default. The pinned R
 implementation returns its current parameters at its iteration cap without a
-convergence error. The oracle therefore records its internal iteration count
-and parameter residual and requires actual convergence before comparing
-statistics. The original comparison at 1,000 reference iterations failed on
-soil; the numerical acceptance thresholds remain unchanged.
+convergence error. The oracle records its internal iteration count and residual
+and requires actual convergence. Both original fits converged below 1,000
+iterations: increasing the reference budget did not resolve their disagreement.
+
+## Reference defect and the qualified comparison
+
+Unmodified ANCOMBC 2.12.0 fails the soil effect, p-value and q-value thresholds.
+Its variance optimizer can stop at zero despite an improving positive direction.
+For a single squared residual 1 and known variance 0.99, the exact conditional
+optimum is extra variance 0.01. The bounded Nelder-Mead call used by the reference
+returns zero when started there. This defect also occurs in the latest upstream
+original-ANCOM-BC estimator. It is addressed in
+[ANCOMBC PR 344](https://github.com/FrederickHuangLin/ANCOMBC/pull/344).
+
+For fixed residuals r_i, known positive variances v_i and nonnegative weights
+w_i, the conditional negative log likelihood, apart from a constant, is
+Q(t) = (1/2) sum_i w_i [log(v_i+t) + r_i^2/(v_i+t)]. Its derivative is
+(1/2) sum_i w_i [(v_i+t)-r_i^2]/(v_i+t)^2. It is nonnegative once
+t >= max_i r_i^2, supplying a finite search interval. In the equal-variance
+case the optimum is max(sum_i w_i r_i^2 / sum_i w_i - v, 0).
+These are calculus derivations, not additional Agda theorems.
+
+The positive conformance gate loads only the bias estimator and its scalar
+variance helper from signed upstream-repair commit
+`6d094731ed85e9b0458053ad3510e9bdc238e152` into the otherwise pinned ANCOMBC
+2.12.0 reference environment. The native Julia optimizer and the R repair use
+different searches (grid/golden-section versus Brent). All 27 checks passed at
+native revision `480b10bd405c2766f08408105435b33d5dd05050`, including convergence
+checks, with the original thresholds unchanged. The largest soil discrepancies
+were 3.57e-6 in effect, 4.21e-5 in SE, 1.10e-4 in p and 1.54e-4 in q.
+
+A separately named pristine-reference control reproduces the analytic boundary
+failure and marks exactly those three soil comparisons as expected failures.
+An unexpected pass fails that control. Without that explicit control mode,
+the unmodified-reference oracle still fails normally. A green combined CI is
+**not a claim of equivalence to unmodified ANCOMBC 2.12.0**: qualification is
+to the stated estimator repair, pending upstream review. Changing that pin
+requires a fresh comparison and an updated receipt.

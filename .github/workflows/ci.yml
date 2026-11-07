@@ -115,10 +115,16 @@ jobs:
           julia --project=test/oracle -e 'using RCall; println(rcopy(R"R.version.string"))'
           julia --project=test/oracle -e 'using CompositionalDA, RCall; @assert Base.get_extension(CompositionalDA, :CompositionalDARCallExt) !== nothing; println("extension loaded")'
       - name: Native vs reference agreement
+        if: matrix.reference == 'ALDEx2'
         run: |
           export R_HOME="$(R RHOME)"
           julia --project=test/oracle test/oracle/${{ matrix.script }}
-      - name: Compare the pinned upstream variance repair
+      - name: Pristine ANCOMBC known-defect control (three expected failures)
+        if: matrix.reference == 'ANCOMBC'
+        run: |
+          export R_HOME="$(R RHOME)"
+          ANCOMBC_PRISTINE_DEFECT_CONTROL=1 julia --project=test/oracle test/oracle/ancombc_oracle.jl
+      - name: ANCOMBC conformance with the pinned upstream variance repair
         if: always() && matrix.reference == 'ANCOMBC'
         run: |
           curl --fail --location --retry 3 https://raw.githubusercontent.com/hyperpolymath/ANCOMBC/6d094731ed85e9b0458053ad3510e9bdc238e152/R/ancombc_bias_correct.R -o /tmp/ancombc-variance-repair.R
