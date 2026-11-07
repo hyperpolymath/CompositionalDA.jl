@@ -38,6 +38,16 @@ before the code).
 
 ## Notation
 
+ALDEx2's CLR instances and descriptive columns (`diff_btw`, `diff_win`,
+`rab_all`) use **base-2** logarithms. The generic core `clr` uses natural
+logarithms. The dimensionless effect and p-values cannot distinguish these
+bases; the reference gate must compare the descriptive columns too.
+All-zero features are excluded before constructing the Dirichlet posterior
+and named in provenance. Labels must be complete, nonempty and unique for
+features; group lengths must match sample rows. Unrepresentable Gamma draws
+raise an explicit error instead of being floored to an arbitrary positive
+number.
+
 - Input: integer counts with `n` samples and `d` features, and a two-level
   condition per sample.
 - `L1 < L2` are the two condition levels in sorted order.

@@ -10,7 +10,8 @@
 module CompositionalDARCallExt
 
 using CompositionalDA
-using CompositionalDA: Provenance, DAResult, validate_counts, CompositionError
+using CompositionalDA: Provenance, DAResult, validate_counts, CompositionError,
+                       validate_two_groups, validate_mc
 using DataFrames
 using RCall
 
@@ -24,16 +25,18 @@ the same column names. Requires R with the ALDEx2 package installed.
 function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
                                           groups::AbstractVector; mc_samples::Integer = 128,
                                           seed::Integer = 1, runner = f -> f())
-    validate_counts(counts)
-    size(counts, 2) == length(features) || throw(CompositionError("feature names do not match columns"))
-    levels = sort(unique(string.(groups)))
-    length(levels) == 2 || throw(CompositionError("aldex2 needs exactly 2 groups"))
+    design = validate_two_groups(counts, features, groups)
+    validate_mc(mc_samples, seed)
+    seed <= typemax(Int32) || throw(ArgumentError("R reference seed must fit Int32"))
+    levels = design.levels
+    keep = vec(any(>(0), counts; dims = 1))
+    count(keep) >= 2 || throw(CompositionError("ALDEx2 needs at least two nonzero features"))
     df = runner() do
-        reads = permutedims(Matrix{Int}(counts))           # ALDEx2 wants features × samples
+        reads = permutedims(Float64.(counts[:, keep]))     # R integers are only 32-bit
         @rput reads
-        conds = string.(groups); lv = levels
+        conds = design.groups; lv = levels
         @rput conds lv
-        fnames = string.(features); @rput fnames
+        fnames = design.features[keep]; @rput fnames
         R"""
         set.seed($seed)
         reads <- as.data.frame(reads); rownames(reads) <- fnames
@@ -56,8 +59,48 @@ function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, fea
                       qvalue = res[!, "we_eBH"], wi_pvalue = res[!, "wi_ep"], wi_qvalue = res[!, "wi_eBH"],
                       diff_btw = res[!, "diff_btw"], diff_win = res[!, "diff_win"], rab_all = res[!, "rab_all"])
     prov = Provenance(:aldex2, :r_reference; seed, mc_samples, r_package = "ALDEx2 $ver",
-                      contrast = "$(levels[2]) vs $(levels[1])")
+                      contrast = "$(levels[2]) vs $(levels[1])", log_base = 2,
+                      excluded_all_zero = design.features[.!keep])
     return DAResult(table, prov)
+end
+
+function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
+    groups::AbstractVector; prevalence::Real=0.1, structural_zeros::Bool=false,
+    negative_lower_bound::Bool=false, conserve::Bool=true, tolerance::Real=1e-7,
+    max_iterations::Integer=1000, runner=f -> f())
+    design = validate_two_groups(counts, features, groups)
+    0 <= prevalence < 1 || throw(ArgumentError("prevalence must be in [0,1)"))
+    isfinite(tolerance) && 0 < tolerance < 1 || throw(ArgumentError("tolerance must be in (0,1)"))
+    max_iterations > 0 || throw(ArgumentError("max_iterations must be positive"))
+    table, version = runner() do
+        reads = permutedims(Float64.(counts))
+        fnames = design.features
+        conds = [g == design.levels[1] ? "reference" : "contrast" for g in design.groups]
+        @rput reads fnames conds prevalence structural_zeros negative_lower_bound conserve tolerance max_iterations
+        R"""
+        rownames(reads) <- fnames
+        colnames(reads) <- paste0("s", seq_len(ncol(reads)))
+        meta <- data.frame(condition=factor(conds, levels=c("reference", "contrast")),
+                           row.names=colnames(reads))
+        input <- phyloseq::phyloseq(phyloseq::otu_table(reads, taxa_are_rows=TRUE),
+                                   phyloseq::sample_data(meta))
+        reference <- ANCOMBC::ancombc(data=input, tax_level=NULL, formula="condition",
+            p_adj_method="BH", prv_cut=prevalence, lib_cut=0, group="condition",
+            struc_zero=structural_zeros, neg_lb=negative_lower_bound, tol=tolerance,
+            max_iter=max_iterations, conserve=conserve, global=FALSE, n_cl=1, verbose=FALSE)
+        ref <- reference$res
+        ids <- if ("taxon" %in% colnames(ref$lfc)) ref$lfc$taxon else rownames(ref$lfc)
+        native_shape <- data.frame(feature=ids, effect=ref$lfc[["conditioncontrast"]],
+            se=ref$se[["conditioncontrast"]], statistic=ref$W[["conditioncontrast"]],
+            pvalue=ref$p_val[["conditioncontrast"]], qvalue=ref$q_val[["conditioncontrast"]])
+        reference_version <- as.character(packageVersion("ANCOMBC"))
+        """
+        rcopy(DataFrame, R"native_shape"), rcopy(String, R"reference_version")
+    end
+    return DAResult(table, Provenance(:ancombc, :r_reference;
+        r_package="ANCOMBC $version", prevalence, structural_zeros, negative_lower_bound,
+        conserve, tolerance, max_iterations,
+        contrast="$(design.levels[2]) vs $(design.levels[1])", log_base="e"))
 end
 
 end # module

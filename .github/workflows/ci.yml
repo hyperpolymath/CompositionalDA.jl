@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['1.10', '1.12']
+        version: ['1.10', '1.12.5']
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9 # v2
@@ -51,11 +51,23 @@ jobs:
       - name: Proof gate (axiom audit, type-check, reject controls, gate self-test)
         run: proofs/check.sh
   oracle:
-    name: R reference oracle (R 4.5.0, Bioconductor 3.22)
+    name: ${{ matrix.reference }} oracle (R 4.5.0, Bioconductor 3.22)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - reference: ALDEx2
+            version: '1.42.0'
+            script: runoracle.jl
+          - reference: ANCOMBC
+            version: '2.12.0'
+            script: ancombc_oracle.jl
     env:
       R_LIBS_USER: ${{ github.workspace }}/.r-lib
+      REFERENCE_PACKAGE: ${{ matrix.reference }}
+      REFERENCE_VERSION: ${{ matrix.version }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
@@ -65,24 +77,28 @@ jobs:
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .r-lib
-          key: r-4.5.0-bioc-3.22-oracle-v1
+          key: r-4.5.0-bioc-3.22-${{ matrix.reference }}-oracle-v2
+      - name: Install reference build dependencies
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libcurl4-openssl-dev libssl-dev libxml2-dev libuv1-dev libgsl-dev
       - name: Install the Bioconductor 3.22 references
         run: |
           mkdir -p "$R_LIBS_USER"
-          Rscript -e 'options(Ncpus = 4, timeout = 3600)
+          Rscript -e 'options(Ncpus = 2, timeout = 3600)
             if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
             BiocManager::install(version = "3.22", ask = FALSE, update = FALSE)
-            for (p in c("ALDEx2")) if (!requireNamespace(p, quietly = TRUE)) BiocManager::install(p, ask = FALSE, update = FALSE)
-            for (p in c("ALDEx2")) cat(p, as.character(packageVersion(p)), "\n")'
+            p <- Sys.getenv("REFERENCE_PACKAGE")
+            if (!requireNamespace(p, quietly = TRUE)) BiocManager::install(p, ask = FALSE, update = FALSE)
+            stopifnot(packageVersion(p) == Sys.getenv("REFERENCE_VERSION"))
+            cat(p, as.character(packageVersion(p)), "\n")'
       - uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9 # v2
         with:
-          version: '1.12'
+          version: '1.12.5'
       - uses: julia-actions/cache@d10a6fd8f31b12404a54613ebad242900567f2b9 # v2
       # RCall.jl's own CI does the same: libR's directory must be on the loader path.
       - name: Put libR on the loader path
         run: echo "LD_LIBRARY_PATH=$(R RHOME)/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
-      - name: R can load ALDEx2
-        run: Rscript -e 'library(ALDEx2); cat(R.version.string, "ALDEx2", as.character(packageVersion("ALDEx2")), "\n")'
+      - name: R can load the pinned reference
+        run: Rscript -e 'p <- Sys.getenv("REFERENCE_PACKAGE"); library(p, character.only=TRUE); cat(R.version.string, p, as.character(packageVersion(p)), "\n")'
       - name: Julia can start R through RCall
         run: |
           export R_HOME="$(R RHOME)"
@@ -95,4 +111,4 @@ jobs:
       - name: Native vs reference agreement
         run: |
           export R_HOME="$(R RHOME)"
-          julia --project=test/oracle test/oracle/runoracle.jl
+          julia --project=test/oracle test/oracle/${{ matrix.script }}

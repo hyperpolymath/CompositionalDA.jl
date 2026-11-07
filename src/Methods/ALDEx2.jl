@@ -19,19 +19,22 @@ ALDEx2 carries sampling uncertainty into the tests.
 """
 function dirichlet_clr_instances(rng::AbstractRNG, counts::AbstractMatrix{<:Integer};
                                  mc_samples::Integer = 128, prior::Real = 0.5)
-    mc_samples > 0 || throw(ArgumentError("mc_samples must be positive"))
-    prior > 0 || throw(ArgumentError("prior must be positive"))
+    validate_counts(counts)
+    mc_samples >= 2 || throw(ArgumentError("mc_samples must be at least 2"))
+    isfinite(prior) && prior > 0 || throw(ArgumentError("prior must be finite and positive"))
     n, d = size(counts)
     out = Array{Float64,3}(undef, n, d, mc_samples)
     g = Vector{Float64}(undef, d)
     for i in 1:n, k in 1:mc_samples
         for j in 1:d
-            g[j] = rand(rng, Gamma(counts[i, j] + prior, 1.0))
+            shape = Float64(counts[i, j]) + Float64(prior)
+            isfinite(shape) || throw(CompositionError("Dirichlet shape is not representable in Float64"))
+            g[j] = rand(rng, Gamma(shape, 1.0))
         end
-        # Gamma draws with tiny shape can underflow to 0; floor them at the
-        # smallest positive normal so the log stays finite.
-        g .= max.(g, floatmin(Float64))
-        l = log.(g)
+        # Flooring a zero draw would silently change the posterior. Refuse an
+        # unrepresentable draw instead. ALDEx2 reports CLR values in log2 units.
+        all(v -> isfinite(v) && v > 0, g) || throw(CompositionError("Dirichlet draw underflowed or overflowed; no result produced"))
+        l = log2.(g)
         out[i, :, k] .= l .- mean(l)
     end
     return out
@@ -191,23 +194,20 @@ Bioconductor reference, not proved.
 """
 function aldex2(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
                 groups::AbstractVector; mc_samples::Integer = 128, seed::Integer = 1)
-    validate_counts(counts)
-    n, d = size(counts)
-    length(features) == d || throw(CompositionError("$(length(features)) feature names for $d columns"))
-    length(groups) == n || throw(CompositionError("$(length(groups)) group labels for $n samples"))
-    levels = sort(unique(groups))
-    length(levels) == 2 || throw(CompositionError("aldex2 needs exactly 2 groups, got $(length(levels))"))
-    i1 = findall(==(levels[1]), groups)
-    i2 = findall(==(levels[2]), groups)
-    (length(i1) >= 2 && length(i2) >= 2) || throw(CompositionError("each group needs at least 2 samples"))
-    first_is_i1 = groups[1] == levels[1]
+    design = validate_two_groups(counts, features, groups)
+    validate_mc(mc_samples, seed)
+    (; levels, i1, i2) = design
+    first_is_i1 = design.groups[1] == levels[1]
+    keep = vec(any(>(0), counts; dims = 1))
+    count(keep) >= 2 || throw(CompositionError("ALDEx2 needs at least two nonzero features"))
 
     rng = StableRNG(seed)
-    inst = dirichlet_clr_instances(rng, counts; mc_samples)
+    inst = dirichlet_clr_instances(rng, counts[:, keep]; mc_samples)
     table = aldex2_from_instances(inst, i1, i2; rng, first_is_i1)
-    insertcols!(table, 1, :feature => collect(features))
+    insertcols!(table, 1, :feature => design.features[keep])
     prov = Provenance(:aldex2, :native; seed, mc_samples, test = "welch+wilcoxon",
-                      contrast = "$(levels[2]) vs $(levels[1])", prior = 0.5)
+                      contrast = "$(levels[2]) vs $(levels[1])", prior = 0.5,
+                      log_base = 2, excluded_all_zero = design.features[.!keep])
     return DAResult(table, prov)
 end
 
