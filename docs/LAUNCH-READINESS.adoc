@@ -1,0 +1,92 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+= Launch readiness: evidence before labels
+
+Assessment date: 2026-11-07. Candidate numerical source:
+`911989080145b9ab43ce06a8c1c8dfe6712ca2e3`.
+This is the author's assessment, not independent scientific review.
+Registration remains on hold. No alpha/beta/stable or RSR certification is granted.
+
+== Source authority
+
+Estate standards were inspected at `fe57d352f0b1a50e5cb07b4aac2581caf355388e`,
+gitbot-fleet at `46d26a4b084c40847d9a2f2ef98305502b7320bc`, and
+proven-tests-and-benches at `e82c54ea6ef0e004f759f3533ebe8373e517f9e3`.
+Refresh these before release. Joshua's CONTRIBUTING governs the WebUI contribution.
+Current estate metadata canon uses one chora DEED, not retired A2ML/SCM files.
+Conflicting old examples must not be copied as if authoritative.
+
+CRG assesses component readiness; TRG imposes additional language-toolchain
+requirements. This scientific library is not a compiler/runtime merely because
+it is written in Julia. SemVer, General eligibility and readiness grades are
+separate. Six simulation regimes do not meet CRG's diverse external-target bar.
+The taxonomy is 18 test categories by 14 aspects; the companion evidence
+framework still documents a 17-by-14 schema. Preserve that migration gap.
+
+== Gates and work allocation
+
+[cols="2,3,3",options="header"]
+|Gate or owner |Required evidence |Current disposition
+|Finishbot (finishingbot) |README/EXPLAINME, install example, licences, About/topics, links, changelog and release description all agree with source
+|About/topics corrected; explanation/security/launch docs proposed. Wiki, changelog, native estate metadata and final release packet remain pending.
+|Seambot |Counts/orientation/groups, zero policy, Julia/R, package/WebUI, JSON/CSV, registry/install seams each have owners and positive/negative contract tests
+|Substantial adapter and export tests exist. Current fleet parser list has no Julia parser; do not report automated Julia seam coverage without an implemented bridge.
+|Echidnabot |Claim-to-theorem map, checker versions, safe/axiom audit, negative controls, counterexamples and executable refinement limits
+|Safe Agda and negative controls pass. Independent proof witnesses and floating-point refinement remain pending; backend inventory is not a successful proof run.
+|Rhodibot / Hypatia |Canonical metadata checks, repository policy and machine-readable findings with source hashes
+|Estate conformance not established; retired metadata examples are an unresolved shared-guidance problem.
+|Cipherbot |Actual dependency/secret/security scans, pinned CI provenance and triaged findings
+|No complete scanner receipt yet; Aqua is quality evidence only.
+|Glambot / Accessibilitybot |Representative branding, correct alt text, legibility at small sizes, text alternatives and no invented assurance marks
+|Social concept approved by user; production export dimensions/size and avatar/hero review remain pending.
+|Sustainabot |Measured runtime, allocations, scaling, work budgets and reproducible hardware/runtime context
+|Benchmark harness proposed; no environmental-impact claim or performance advantage established.
+|RobotRepoAutomaton |Execute authorised repairs with regression evidence and preserve provenance
+|May implement fixes; cannot approve its own scientific or human-review gate.
+|Panicbot |Escalate severe integrity/security failures without suppressing evidence
+|Adverse small-unbalanced ANCOM-BC calibration must block a general calibration claim.
+|Human maintainer and independent scientist |Review actual diff by hand, assess applicability, data rights, uncertainty and accepted claims
+|Pending; automated or neural reviews do not count as those decisions.
+|===
+
+These are proposed objectives for the real fleet roles, not claims that a bot
+ran or supports every language/backend. The fleet's finishing documentation
+still mentions retired six-file SCM metadata; it needs reconciliation with
+current canon before that objective can be marked complete.
+
+== Stage boundaries
+
+* Research/pre-alpha: explicit scope/refusals, reproducible baseline, no unsupported
+  calibration/clinical/stable claim. Adverse findings stay visible.
+* Alpha candidate: applicable CRG minimum and canonical repository requirements,
+  tested installation and user workflow, signed provenance, known-bug treatment,
+  and human approval of the exact bounded claim. Test count alone is insufficient.
+* Beta candidate: independent reproduction and scientific review; adequately
+  powered, prespecified calibration; relevant external datasets/targets; mutation,
+  fuzz and seam campaigns; measured performance/support budgets and regression policy.
+* Stable candidate: satisfy the applicable estate V1 gate, including all claimed
+  proof/test/benchmark/security obligations and artifact/claim parity. A green CI
+  icon or version number cannot substitute for these requirements.
+
+General submission additionally needs correct name/UUID/compat/licence, clean
+installation without an unregistered dependency, declared AI assistance and the
+human review General requires. Registration review, the waiting period, tagging
+and release publication remain distinct events. Other registries need their own
+adapters for namespace, licence, provenance, binaries, signing and review rules.
+
+== Risk and uncertainty
+
+Prioritise severity, exposure, detectability and confidence; retain the raw
+evidence rather than treating an ordinal risk score as a probability. Calibration
+failure outranks cosmetic completeness. Define a Six Sigma defect and opportunity
+before collecting DPMO; dependent test assertions are not independent customer
+opportunities. No Six Sigma capability is inferred from these tests.
+
+Budget independent datasets, not just taxon-level observations. Record model
+misspecification, selection/refusal bias, Monte-Carlo uncertainty, software drift
+and human applicability review separately. Each release claim needs an owner,
+acceptance criterion fixed before measurement, receipt, expiry/retest trigger,
+remaining uncertainty and a rollback/withdrawal decision.
+
+The comprehensive independent-review prompt and 18-by-14 ledger are maintained
+in the review packet. They must remain capable of rejecting this assessment.

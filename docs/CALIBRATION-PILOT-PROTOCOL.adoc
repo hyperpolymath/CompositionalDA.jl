@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= Calibration pilot protocol
+
+This protocol is fixed before examining pilot results. It is exploratory
+evidence for planning a larger independent study, not a calibration certificate
+or a release acceptance test. No tolerance is tuned to observed results.
+
+== Estimands and regimes
+
+Generate independent samples with 40 absolute-abundance components, lognormal
+biological variation and multinomial sampling at a specified library depth.
+Use baseline abundances spanning 1,000–5,000, with log-scale SD 0.35 unless
+specified. Conditions are labelled 0 and 1. Signal scenarios apply equal
+numbers of fourfold increases and fourfold decreases, so the sum of log fold
+changes is zero. In that restricted construction, population CLR differences
+and absolute log-abundance differences have the same zero/nonzero support.
+This alignment is intentional; it does not make these estimands equivalent
+on arbitrary data.
+
+Run 32 independent datasets per regime, seeds determined before execution:
+
+* Balanced null: 10/10 samples, depth 10,000, no group effect.
+* Depth imbalance null: 10/10, depths 1,000/10,000, no abundance effect.
+* Small unbalanced null: 4/16, depth 1,000, no abundance effect.
+* Sparse null: 6/6, depth 200, baseline abundances geometrically spanning
+  exp(-4)–1, biological log SD 0.7, no abundance effect.
+* Sparse signal: 10/10, depth 10,000, two features up fourfold and two down
+  fourfold; 36 null features.
+* Dense balanced signal: 10/10, depth 10,000, ten features up and ten down
+  fourfold; 20 null features. Treat this as sensitivity to the bias estimator's
+  predominantly-null identification premise.
+
+ALDEx2 uses 128 Monte Carlo instances and a separately recorded seed. ANCOM-BC
+uses its documented conservative setting, prevalence 0.1, structural-zero
+decisions disabled, tolerance 1e-7 and maximum 1,000 iterations. Refusals are
+recorded separately and are never interpreted as successful zero discoveries.
+Analyse reported q-values at 0.05 and 0.10. Record true/false discoveries,
+false-discovery proportion, power, tested/excluded features and runtime.
+
+== Uncertainty and interpretation
+
+Report the fit-success fraction and metrics conditional on successful fits.
+For each null regime, report the probability of at least one false discovery
+(equal to FDR under the complete null) with a 95% Wilson interval over
+independent datasets, not over correlated features. For signal scenarios
+report mean false-discovery proportion and power, with transparent sample
+counts; avoid a narrow-confidence claim from this pilot.
+
+Thirty-two replicates cannot certify a 5% false-positive bound: even zero
+events leaves a substantial upper confidence limit. The study does not cover
+all distributions, batch effects, arbitrary zero mechanisms, repeated
+measures, ecological identification, external deployment or user acceptance.
+The six scenarios are not six unrelated external CRG validation targets.
+Reference-program agreement is evaluated separately on the existing real
+gut/soil fixtures and mock data; it is not substituted for calibration here.
+
+== Provenance and reuse
+
+The estate's proven-tests-and-benches framework was inspected first. It
+provides evidence/coverage abstractions, not a ready-made Julia compositional
+calibration experiment for this estimand. This domain-specific pilot therefore
+records its own assumptions, seeds, results and limitations. Its synthetic
+data contain no human records. Preserve the protocol hash alongside results.

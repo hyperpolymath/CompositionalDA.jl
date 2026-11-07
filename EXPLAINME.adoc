@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+= What CompositionalDA can establish
+
+This package analyses raw integer counts in samples-by-features orientation.
+Its current methods are unpaired two-group ALDEx2 and original ANCOM-BC.
+It does not implement ANCOM-BC2, covariate adjustment or repeated measures.
+Zero handling, the contrast direction, seeds and numerical policies belong in
+the analysis record. Swapping groups changes the effect direction.
+
+== Evidence and its limits
+
+[cols="2,3,3",options="header"]
+|===
+|Claim |Owning evidence |What remains outside it
+|Exact algebraic identities |`proofs/PROOF-STATUS.md`, safe Agda modules and negative controls
+|Floating-point refinement, sorter correctness, FDR and biological truth
+|Numerical method agreement |`test/oracle/`, pinned R/Bioconductor releases and explicitly repaired reference functions
+|Equivalence to pristine defective references, every input or later upstream releases
+|Regression resistance |`test/`, seeded fuzz/property tests and planted mutants
+|Exhaustive path/state coverage or the absence of unknown defects
+|Real processed microbiome inputs |`docs/DATASETS.md`, archived source hashes and gut/soil fixtures
+|Known ground truth, prospective clinical validity or general calibration
+|Exploratory operating characteristics |`docs/CALIBRATION-PILOT-PROTOCOL.adoc`, `benchmark/calibration_pilot.jl`
+|A calibration certificate; the small-unbalanced ANCOM-BC null pilot is adverse
+|Performance |`benchmark/benchmarks.jl`, machine-specific raw measurements
+|A speed advantage over R or an agreed latency/service-level guarantee
+|===
+
+The 2026-11-07 calibration pilot fixed six regimes and 32 independently seeded
+datasets per regime before measurement. Of 384 method fits, 365 returned and
+19 refused. Rates conditional on returned fits must be accompanied by refusal
+counts. Under the small-unbalanced complete null, original ANCOM-BC made false
+discoveries in 19/29 successful fits at 0.05 (Wilson 95% interval 0.473–0.801).
+The unconditional observed count is 19/32; refusals are not successful negative
+findings. This requires investigation against the repaired R reference and a
+reviewed support restriction or estimator correction before a calibration claim.
+Do not fix it by tuning the pilot seeds, removing adverse regimes or quietly
+substituting another method.
+
+ALDEx2's pilot is much less adverse, but 32 datasets cannot certify 5% FDR.
+All-null FDR is the probability of any rejection. With signal present, that
+probability is family-wise error; mean false discovery proportion estimates
+FDR instead. The reported Wilson intervals are for event probabilities, not
+mean FDP, taxa treated as independent replications, or arbitrary populations.
+
+At only two ALDEx2 Monte-Carlo instances, a separate 4,096-seed probe produced
+58 infinite and three undefined effect estimates. Its p/q bounds still held.
+The WebUI refuses non-finite effects; this is an estimator usability limitation
+to address explicitly, not permission to coerce undefined effects to zero.
+
+== Trust and release decisions
+
+Julia, GMP/MPFR, BLAS, dependencies, the operating system, reference software,
+data provenance and proof checkers remain in the trusted environment.
+Agda algebra does not independently verify those implementations. No second
+Rocq/Lean witness or full executable refinement is claimed.
+
+General registration is explicitly on hold pending the human maintainer's review
+of the changed implementation. A signature authenticates a commit, not its
+mathematical or scientific correctness. Version 0.3.0 in Project.toml is not a
+stable-release grade. No CRG/TRG/RSR certificate is asserted.
