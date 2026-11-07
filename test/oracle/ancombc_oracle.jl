@@ -4,6 +4,19 @@
 using CompositionalDA, DataFrames, RCall, Statistics, Test
 include("datasets.jl")
 
+# Diagnostic comparison to an explicitly pinned upstream repair. The ordinary
+# job leaves this unset and still tests the unmodified Bioconductor release.
+if haskey(ENV, "ANCOMBC_ESTIMATOR_SOURCE")
+    estimator_source = ENV["ANCOMBC_ESTIMATOR_SOURCE"]
+    @rput estimator_source
+    R"""
+    estimator_environment <- new.env(parent=asNamespace("ANCOMBC"))
+    sys.source(estimator_source, envir=estimator_environment)
+    assignInNamespace(".bias_em", estimator_environment$.bias_em, ns="ANCOMBC")
+    """
+    println("REFERENCE OVERRIDE: bias estimator loaded from ", estimator_source)
+end
+
 # Fixed BEFORE examining the comparison results. These are numerical
 # conformance thresholds, not confidence bounds or proofs of calibration.
 const ANCOMBC_TOLERANCE = (effect=0.05, se=0.02, pvalue=0.02, qvalue=0.02)
