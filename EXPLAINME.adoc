@@ -33,8 +33,14 @@ datasets per regime before measurement. Of 384 method fits, 365 returned and
 counts. Under the small-unbalanced complete null, original ANCOM-BC made false
 discoveries in 19/29 successful fits at 0.05 (Wilson 95% interval 0.473–0.801).
 The unconditional observed count is 19/32; refusals are not successful negative
-findings. This requires investigation against the repaired R reference and a
-reviewed support restriction or estimator correction before a calibration claim.
+findings. The follow-up repaired-R experiment converged for all 32 datasets and
+also made false discoveries in 19. Of 29 paired successful native fits, 28 had
+maximum q-value differences below 8.5e-6, but replicate 27 differed by 0.5041
+and changed the discovery decision. Numerical conformance is therefore not
+established across this expanded regime. A reviewed support restriction or
+estimator correction, and fresh prespecified validation, are needed before a
+calibration claim. The raw receipt is CI run 42411431729, artifact
+`small-unbalanced-calibration`, at source `cbb8ac4d85b4259c8122ed83c2cce8ec6c34362a`.
 Do not fix it by tuning the pilot seeds, removing adverse regimes or quietly
 substituting another method.
 

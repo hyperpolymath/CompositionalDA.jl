@@ -44,7 +44,7 @@ framework still documents a 17-by-14 schema. Preserve that migration gap.
 |RobotRepoAutomaton |Execute authorised repairs with regression evidence and preserve provenance
 |May implement fixes; cannot approve its own scientific or human-review gate.
 |Panicbot |Escalate severe integrity/security failures without suppressing evidence
-|Adverse small-unbalanced ANCOM-BC calibration must block a general calibration claim.
+|Adverse small-unbalanced ANCOM-BC calibration occurs in native and repaired R results. Expanded comparison also finds one large q-value disagreement. Both remain launch blockers for the corresponding claims.
 |Human maintainer and independent scientist |Review actual diff by hand, assess applicability, data rights, uncertainty and accepted claims
 |Pending; automated or neural reviews do not count as those decisions.
 |===
