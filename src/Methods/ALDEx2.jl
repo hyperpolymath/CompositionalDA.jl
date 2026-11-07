@@ -22,14 +22,16 @@ function dirichlet_clr_instances(rng::AbstractRNG, counts::AbstractMatrix{<:Inte
     validate_counts(counts)
     mc_samples >= 2 || throw(ArgumentError("mc_samples must be at least 2"))
     isfinite(prior) && prior > 0 || throw(ArgumentError("prior must be finite and positive"))
+    stored_prior = Float64(prior)
+    isfinite(stored_prior) && stored_prior > 0 || throw(ArgumentError("prior must be representable as a positive finite Float64"))
+    shapes = float_count_matrix(counts) .+ stored_prior
+    all(isfinite, shapes) || throw(CompositionError("Dirichlet shape is not representable in Float64"))
     n, d = size(counts)
     out = Array{Float64,3}(undef, n, d, mc_samples)
     g = Vector{Float64}(undef, d)
     for i in 1:n, k in 1:mc_samples
         for j in 1:d
-            shape = Float64(counts[i, j]) + Float64(prior)
-            isfinite(shape) || throw(CompositionError("Dirichlet shape is not representable in Float64"))
-            g[j] = rand(rng, Gamma(shape, 1.0))
+            g[j] = rand(rng, Gamma(shapes[i, j], 1.0))
         end
         # Flooring a zero draw would silently change the posterior. Refuse an
         # unrepresentable draw instead. ALDEx2 reports CLR values in log2 units.
@@ -41,12 +43,23 @@ function dirichlet_clr_instances(rng::AbstractRNG, counts::AbstractMatrix{<:Inte
 end
 
 """
-    welch_upper_p(a, b) -> Float64
+    welch_tails(a, b) -> (upper, lower)
 
-One-sided Welch t-test p-value `P(T ≥ t)` for `mean(a) > mean(b)`, with
-Welch–Satterthwaite degrees of freedom.
+Both one-sided Welch t-test p-values, evaluated separately with
+Welch–Satterthwaite degrees of freedom to preserve small probabilities.
 """
-welch_upper_p(a, b) = pvalue(UnequalVarianceTTest(a, b); tail = :right)
+function welch_tails(a, b)
+    variance = var(a) / length(a) + var(b) / length(b)
+    isfinite(variance) && variance > 0 || throw(CompositionError("Welch test has zero or non-finite sampling variance"))
+    try
+        test = UnequalVarianceTTest(a, b)
+        return pvalue(test; tail=:right), pvalue(test; tail=:left)
+    catch error
+        error isa DomainError && throw(CompositionError("Welch test is not estimable at the available numerical precision"))
+        rethrow()
+    end
+end
+welch_upper_p(a, b) = first(welch_tails(a, b))
 
 """
     mann_whitney_u(a, b) -> Float64
@@ -85,18 +98,40 @@ function mann_whitney_upper_tail(n1::Integer, n2::Integer)
 end
 
 """
-    wilcoxon_upper_p(a, b, tail) -> Float64
+    wilcoxon_tails(a, b, tail) -> (upper, lower)
 
 One-sided Wilcoxon rank-sum p-value for `a` above `b`. With `tail` from
 [`mann_whitney_upper_tail`](@ref) it is exact, `P(U' ≥ U)`; with `tail ===
 nothing` it is the normal approximation without continuity correction.
 """
-function wilcoxon_upper_p(a, b, tail)
+function wilcoxon_tails(a, b, tail)
     u = mann_whitney_u(a, b)
-    tail === nothing || return tail[Int(ceil(u)) + 1]
     n1 = length(a); n2 = length(b)
-    return ccdf(Normal(), (u - n1 * n2 / 2) / sqrt(n1 * n2 * (n1 + n2 + 1) / 12))
+    pooled = sort(vcat(a, b))
+    all(isfinite, pooled) || throw(CompositionError("Wilcoxon observations must be finite"))
+    correction = 0.0
+    first = 1
+    while first <= length(pooled)
+        last = first
+        while last < length(pooled) && pooled[last+1] == pooled[first]
+            last += 1
+        end
+        size = Float64(last - first + 1)
+        correction += size^3 - size
+        first = last + 1
+    end
+    if tail !== nothing && correction == 0
+        # Both tails include the observed atom. 1-upper is the STRICT lower
+        # tail and gives direction-dependent, anti-conservative rank p-values.
+        return tail[Int(u) + 1], tail[n1*n2 - Int(u) + 1]
+    end
+    n = n1 + n2
+    variance = n1*n2 / 12 * (n+1 - correction / (n*(n-1)))
+    isfinite(variance) && variance > 0 || throw(CompositionError("Wilcoxon test has zero or non-finite rank variance"))
+    z = (u - n1*n2/2) / sqrt(variance)
+    return ccdf(Normal(), z), ccdf(Normal(), -z)
 end
+wilcoxon_upper_p(a, b, tail) = first(wilcoxon_tails(a, b, tail))
 
 """
     effect_pairs(rng, n1, n2) -> NamedTuple
@@ -152,14 +187,19 @@ function aldex2_from_instances(inst::AbstractArray{<:Real,3}, i1::AbstractVector
     tail = length(t1) < 50 && length(t2) < 50 ? mann_whitney_upper_tail(length(t1), length(t2)) : nothing
     acc = Dict(k => zeros(d) for k in (:wg, :wl, :wgq, :wlq, :rg, :rl, :rgq, :rlq))
     pw = Vector{Float64}(undef, d); pr = Vector{Float64}(undef, d)
+    lw = similar(pw); lr = similar(pr)
     for k in 1:mc
         for j in 1:d
             a = inst[t1, j, k]; b = inst[t2, j, k]
-            pw[j] = welch_upper_p(a, b)
-            pr[j] = wilcoxon_upper_p(a, b, tail)
+            pw[j], lw[j] = welch_tails(a, b)
+            pr[j], lr[j] = wilcoxon_tails(a, b, tail)
+            all(p -> isfinite(p) && 0 <= p <= 1, (pw[j], lw[j])) ||
+                throw(CompositionError("Welch test is not estimable for feature column $j at Monte Carlo instance $k"))
+            all(p -> isfinite(p) && 0 <= p <= 1, (pr[j], lr[j])) ||
+                throw(CompositionError("Wilcoxon test is not estimable for feature column $j at Monte Carlo instance $k"))
         end
-        for (p, g, l, gq, lq) in ((pw, :wg, :wl, :wgq, :wlq), (pr, :rg, :rl, :rgq, :rlq))
-            up = min.(1.0, 2 .* p); dn = min.(1.0, 2 .* (1 .- p))
+        for (greater, less, g, l, gq, lq) in ((pw, lw, :wg, :wl, :wgq, :wlq), (pr, lr, :rg, :rl, :rgq, :rlq))
+            up = min.(1.0, 2 .* greater); dn = min.(1.0, 2 .* less)
             acc[g] .+= up; acc[l] .+= dn
             acc[gq] .+= bh_adjust(up); acc[lq] .+= bh_adjust(dn)
         end
@@ -207,7 +247,8 @@ function aldex2(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
     insertcols!(table, 1, :feature => design.features[keep])
     prov = Provenance(:aldex2, :native; seed, mc_samples, test = "welch+wilcoxon",
                       contrast = "$(levels[2]) vs $(levels[1])", prior = 0.5,
-                      log_base = 2, excluded_all_zero = design.features[.!keep])
+                      log_base = 2, directional_tails = "inclusive; tie-adjusted normal for tied ranks",
+                      excluded_all_zero = design.features[.!keep])
     return DAResult(table, prov)
 end
 

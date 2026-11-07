@@ -41,6 +41,17 @@ The exact commands, exit codes and counts of the most recent run are in
 
 ## What is proved
 
+### Finite directional tails (correctness rereview)
+
+`CompositionalDA.DiscreteTails` proves on natural-number outcome counts that
+subtracting an inclusive upper-tail count from the total leaves the strict
+lower count, and adding the observed atom restores the inclusive lower count.
+The six-outcome, one-atom counterexample is checked by normalization; the
+`LostAtom` rejection control must fail for claiming the strict count is one.
+Exhaustive Julia tests connect this identity to the implemented rank CDF for
+all group sizes two through four. This is not a proof of arbitrary-size
+floating-point execution, posterior calibration, or FDR control.
+
 ### Additional method identities (v0.3 development)
 
 `CompositionalDA.PosteriorP` proves over exact rationals that the sum of

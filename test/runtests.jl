@@ -15,10 +15,13 @@ include("mutants.jl")
         Aqua.test_all(CompositionalDA)
     end
     include("unit_core.jl")
+    include("fuzz_core.jl")
+    include("fuzz_statistics.jl")
     include("property_clr.jl")
     include("property_bh.jl")
     include("property_aldex2.jl")
     include("boundary_aldex2.jl")
     include("method_ancombc.jl")
+    include("fuzz_ancombc.jl")
     include("posterior_aggregation.jl")
 end

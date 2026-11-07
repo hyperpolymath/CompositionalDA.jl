@@ -3,6 +3,7 @@
 
 using CompositionalDA, DataFrames, RCall, Statistics, Test
 include("datasets.jl")
+include("adapter_boundaries.jl")
 
 # Diagnostic comparison to an explicitly pinned upstream repair. The ordinary
 # job leaves this unset and still tests the unmodified Bioconductor release.

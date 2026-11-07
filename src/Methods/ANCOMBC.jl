@@ -150,6 +150,10 @@ function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
     isfinite(prevalence) && 0 <= prevalence < 1 || throw(ArgumentError("prevalence must be in [0,1)"))
     isfinite(pseudocount) && pseudocount > 0 || throw(ArgumentError("pseudocount must be finite and positive"))
     isfinite(tolerance) && 0 < tolerance < 1 || throw(ArgumentError("tolerance must be in (0,1)"))
+    pseudocount = Float64(pseudocount)
+    tolerance = Float64(tolerance)
+    isfinite(pseudocount) && pseudocount > 0 || throw(ArgumentError("pseudocount must be representable as a positive finite Float64"))
+    0 < tolerance < 1 || throw(ArgumentError("tolerance must be representable as a Float64 strictly between 0 and 1"))
     max_iterations > 0 || throw(ArgumentError("max_iterations must be positive"))
     negative_lower_bound && !structural_zeros && throw(ArgumentError("negative_lower_bound requires structural_zeros"))
     present = counts .> 0

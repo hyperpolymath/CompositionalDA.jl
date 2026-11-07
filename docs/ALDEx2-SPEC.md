@@ -36,6 +36,18 @@ agent that was barred from the reference source, R and web search wrote
 `src/Methods/ALDEx2.jl` from this document (spec committed alone as `87a6316`,
 before the code).
 
+### Correctness rereview, 2026-11-07
+
+The historical clean-room implementation above describes the original work.
+This rereview inspected the upstream R source to diagnose and repair the
+directional-tail defect there. The Julia correction is derived from the
+finite-distribution CDF identity and extends the existing native recurrence;
+no R source was copied or translated into the MPL implementation. It intentionally
+differs from pristine ALDEx2 1.42.0 at this defect. CI first demonstrates the
+pristine counterexample, then explicitly loads the pinned proposed upstream
+repair for conformance. A green repaired-reference job is not pristine-release
+equivalence or a proof of posterior calibration/FDR control.
+
 ## Notation
 
 ALDEx2's CLR instances and descriptive columns (`diff_btw`, `diff_win`,
@@ -67,10 +79,12 @@ number.
 - The property test P6 calls the function without this flag and gets the
   default.
 
-Test group 1 only matters for the exact Wilcoxon p-value, because that
-distribution is discrete. The rule is part of the reference behaviour: on the
-soil dataset, whose first sample is in `L2`, using `L1` instead moves `wi_pvalue`
-by up to 0.0097.
+Both directional tails now include the observed statistic. Swapping test
+groups swaps the two tails and leaves the final minimum unchanged on identical
+instances. The earlier 1.42.0 compatibility rule instead used `1 - upper` for
+the discrete lower tail; that drops the observed atom and can depend on which
+condition occurs first. The exhaustive two-versus-two allocation test detects
+this defect: an extreme allocation must report 1/3 in either direction.
 
 ## Per-instance one-sided p-values
 
@@ -85,18 +99,23 @@ For each instance `k` and feature `j`, let `a` be the values of test group 1 and
     distribution of the Mann–Whitney statistic for sizes `(n1, n2)`.
   - Otherwise use the normal approximation **without continuity correction**:
     `pR = 1 − Φ((U − n1·n2/2) / sqrt(n1·n2·(n1+n2+1)/12))`.
-  - CLR instances are continuous, so ties have probability zero. If any do
-    occur, count a tie as ½ in `U`; the result in that case is not
-    oracle-checked.
+  - Floating-point ties can occur. Count each cross-group tie as ½ in `U`
+    and use the normal approximation with variance
+    `n1*n2/12 * (N+1 - sum(t^3-t)/(N*(N-1)))`, where the `t` are pooled tie
+    block sizes. A zero variance is refused explicitly.
+  - Compute the inclusive lower tail `P(U′ ≤ U)` separately. For the
+    symmetric exact distribution it is the upper tail at `n1*n2-U`.
+    Normal and Welch tails are evaluated directly in each direction to avoid
+    subtractive cancellation at small probabilities.
 
 ## Consistent-sign expected p-values
 
-For a per-instance upper-tail p-value `p` (either `pW` or `pR`), define the two
-doubled directional values:
+For separately evaluated per-instance inclusive tails `upper` and `lower`,
+define the two doubled directional values:
 
 ```
-g = min(1, 2p)          # "group 1 higher"
-l = min(1, 2(1 − p))    # "group 1 lower"   (note: 1 − p, not the lower tail)
+g = min(1, 2 * upper)   # "group 1 higher"
+l = min(1, 2 * lower)   # "group 1 lower", including the observed atom
 ```
 
 Then, per test:
