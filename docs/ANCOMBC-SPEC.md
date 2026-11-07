@@ -6,7 +6,9 @@
 `ancombc` implements the **original two-group model** of Lin and Peddada,
 *Analysis of compositions of microbiomes with bias correction*, Nature
 Communications 11, 3514 (2020), doi:10.1038/s41467-020-17041-7. It was derived
-from the published equations, not copied or translated from the R estimator source.
+from the published equations. The R estimator source was subsequently inspected
+to diagnose reference discrepancies and document its initialization, stopping
+and variance conventions; this is not a clean-room conformance exercise.
 It is not ANCOM-BC2. Covariates, interactions, repeated measures, global tests
 and pairwise testing of more than two groups are outside this API.
 
