@@ -2,6 +2,18 @@
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 @testset "ANCOM-BC original two-group model" begin
+    @testset "WLS mixture-proportion classes and boundary ties" begin
+        uncertainty = CompositionalDA.ancombc_wls([-2., -1, 0, 1, 2], ones(5),
+            [-1., 0, 2], [1., 0, 3], [0.2, 0.6, 0.2])
+        @test uncertainty.classes == [1, 2, 2, 2, 3]
+        @test uncertainty.wls ≈ -2/15
+        @test uncertainty.variance ≈ 4/15
+        tied = CompositionalDA.ancombc_wls([-1., -1, 0, 1, 1], ones(5),
+            [-1., 0, 2], [1., 0, 3], [0.25, 0.5, 0.25])
+        @test tied.classes == [2, 2, 2, 3, 3]
+        @test tied.wls ≈ -5/7
+        @test tied.variance ≈ 2/7
+    end
     @testset "equations 6 and 14, known answer and nuisance offsets" begin
         y = [1.0 3 5 7; 3 1 7 5; 2 5 4 9; 4 3 8 5]
         moments = CompositionalDA.ancombc_moments(y, [1, 2], [3, 4])

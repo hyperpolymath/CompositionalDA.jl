@@ -65,6 +65,17 @@ function mixture_responsibilities(x, v, centres, extra, mixing)
     return weights ./ total, sum(maxima .+ log.(total))
 end
 
+function ancombc_wls(x, v, centres, extra, mixing)
+    # The reference WLS approximation assigns lower/upper tails by the fitted
+    # component proportions. These are not maximum-posterior classifications.
+    lower, upper = quantile(x, [mixing[1], 1 - mixing[3]])
+    classes = [value < lower ? 1 : value >= upper ? 3 : 2 for value in x]
+    weights = [1 / (v[i] + extra[classes[i]]) for i in eachindex(x)]
+    shifts = centres .- centres[2]
+    return (; wls = sum(weights .* (x .- shifts[classes])) / sum(weights),
+            variance = 1 / sum(weights), classes)
+end
+
 function ancombc_bias(x, v; tolerance = 1e-7, max_iterations = 1000)
     length(x) >= 4 || throw(CompositionError("ANCOM-BC requires at least four estimable taxa"))
     all(z -> isfinite(z) && z > 0, v) || throw(CompositionError("ANCOM-BC has a zero or non-finite variance; no result produced"))
@@ -104,11 +115,8 @@ function ancombc_bias(x, v; tolerance = 1e-7, max_iterations = 1000)
         change = maximum(abs.(vcat(centres-oldcentres, extra-oldextra, mixing-oldmixing)))
         if abs(next_likelihood - likelihood) <= tolerance * (1 + abs(likelihood)) &&
                 change <= tolerance * (1 + maximum(abs, vcat(centres, extra, mixing)))
-            classes = [argmax(@view next_resp[i, :]) for i in eachindex(x)]
-            weights = [1 / (v[i] + extra[classes[i]]) for i in eachindex(x)]
-            shifts = centres .- centres[2]
-            wls = sum(weights .* (x .- shifts[classes])) / sum(weights)
-            return (; bias = centres[2], wls, variance = 1 / sum(weights),
+            uncertainty = ancombc_wls(x, v, centres, extra, mixing)
+            return (; bias = centres[2], wls = uncertainty.wls, variance = uncertainty.variance,
                     iterations = iteration, likelihood = next_likelihood,
                     mixing, centres, extra)
         end
@@ -186,7 +194,7 @@ function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
         tolerance, max_iterations, excluded_features = design.features[.!keep],
         bias = fit.bias, bias_wls = fit.wls, bias_variance = fit.variance,
         iterations = fit.iterations, log_likelihood = fit.likelihood,
-        mixture_weights = fit.mixing, p_adjust = "BH")
+        mixture_weights = fit.mixing, bias_classification = "mixture-weight-quantiles", p_adjust = "BH")
     return DAResult(table, provenance)
 end
 

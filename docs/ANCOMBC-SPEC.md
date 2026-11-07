@@ -62,6 +62,11 @@ equation 31 and the conservative bound in equation 35. The paper's equation
 35 also substitutes the WLS point estimate in its numerator; this API retains
 the EM coefficient when changing the uncertainty option. The WLS point
 estimate remains in provenance for comparison, not as the reported effect.
+For this WLS approximation, taxa below the fitted lower-component proportion's
+quantile form the lower class; taxa at or above the upper-tail quantile form
+the upper class. The middle interval is lower-inclusive and upper-exclusive,
+matching the reference's tie conventions. This is recorded as
+`bias_classification = "mixture-weight-quantiles"` in provenance.
 Two-sided normal Wald p-values are BH-adjusted over tested taxa. Natural-log
 effects and all fit settings are recorded in provenance.
 
