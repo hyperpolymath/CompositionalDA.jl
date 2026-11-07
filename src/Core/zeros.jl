@@ -88,6 +88,12 @@ function replace_zeros(p::MultiplicativeReplacement, counts::AbstractMatrix{<:In
         r = nz == 0 ? 0.0 : Float64(p.δ / scale / scaled_total)
         nz == 0 || r > 0 || throw(CompositionError("sample $i: zero replacement underflows Float64"))
         shrink = 1 - nz * r
+        if abs(shrink) <= 8eps(Float64)
+            # Near cancellation, use the exact count total and stored δ so
+            # rounding r cannot erase a positive residual. BigInt avoids overflow.
+            total = sum(BigInt, row)
+            shrink = Float64((total - nz * Rational{BigInt}(p.δ)) / total)
+        end
         shrink > 0 || throw(CompositionError("sample $i: replacement δ too large for $nz zeros"))
         for j in axes(counts, 2)
             out[i, j] = iszero(row[j]) ? r : shrink * scaled[j] / scaled_total

@@ -1,10 +1,31 @@
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
+# A policy that could hide invalid counts if the CLR boundary skipped validation.
+struct AbsoluteCountsPolicy <: ZeroPolicy end
+CompositionalDA.replace_zeros(::AbsoluteCountsPolicy, counts::AbstractMatrix{<:Integer}) =
+    Float64.(abs.(counts)) .+ 1
+
 @testset "Adversarial core boundaries" begin
     @test closure(fill(typemax(Int), 1, 2)) ≈ fill(0.5, 1, 2)
     @test closure(fill(floatmax(Float64), 1, 2)) ≈ fill(0.5, 1, 2)
     @test closure(fill(big(10)^1000, 1, 2)) ≈ fill(0.5, 1, 2)
+    for T in (Float16, Float32)
+        narrow = [nextfloat(zero(T)) floatmax(T)]
+        expected = Float64.(BigFloat.(narrow) ./ sum(BigFloat.(narrow)))
+        @test all(>(0), closure(narrow))
+        @test closure(narrow) ≈ expected rtol=2e-15
+    end
+    @test_throws CompositionError clr(AbsoluteCountsPolicy(), [-1 2])
+    @test clr(AbsoluteCountsPolicy(), [1 2]) ≈ clr([2.0 3.0])
+    near_one = replace_zeros(MultiplicativeReplacement(prevfloat(1.0)), [3 2 0 0 0 0 0])
+    @test all(>(0), near_one)
+    @test sum(near_one) ≈ 1.0
+    @test near_one[1, 1] / near_one[1, 2] ≈ 3 / 2
+    @test near_one[1, 1] ≈ 3 / 5 * (1 - prevfloat(1.0))
+    many_zeros = reshape(vcat([1025, 1025], zeros(Int, 2050)), 1, :)
+    @test all(>(0), replace_zeros(MultiplicativeReplacement(prevfloat(1.0)), many_zeros))
+    @test_throws CompositionError replace_zeros(MultiplicativeReplacement(prevfloat(1.0)), [1 0 0])
     for empty in (zeros(0, 2), zeros(1, 0))
         @test_throws CompositionError closure(empty)
         @test_throws CompositionError clr(empty)

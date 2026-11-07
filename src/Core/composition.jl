@@ -85,7 +85,10 @@ function closure(x::AbstractMatrix{<:Real})
     all(v -> isfinite(v) && v > 0, x) || throw(CompositionError("closure needs strictly positive finite parts"))
     # Scale before summing: both integer totals and finite floating-point
     # totals can overflow even though every closed proportion is representable.
-    scaled = Float64.(x ./ maximum(x; dims = 2))
+    # Widen narrow floats before division, while leaving large integers and
+    # arbitrary-precision values in their original scaling domain.
+    wide = eltype(x) <: Union{Float16,Float32} ? Float64.(x) : x
+    scaled = Float64.(wide ./ maximum(wide; dims = 2))
     out = scaled ./ sum(scaled; dims = 2)
     all(v -> isfinite(v) && v > 0, out) ||
         throw(CompositionError("closed proportions are not representable as positive Float64 values"))
