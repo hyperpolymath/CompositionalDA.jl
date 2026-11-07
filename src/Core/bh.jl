@@ -14,8 +14,10 @@ function bh_adjust(p::AbstractVector{<:Real})
     idx = findall(!isnan, p)
     m = length(idx)
     m == 0 && return out
+    # Validate before conversion: an invalid high-precision value just above
+    # one can otherwise round to 1.0 and be silently accepted.
+    all(v -> 0 <= v <= 1, p[idx]) || throw(ArgumentError("p-values must lie in [0, 1]"))
     q = Float64.(p[idx])
-    all(v -> 0 <= v <= 1, q) || throw(ArgumentError("p-values must lie in [0, 1]"))
     ord = sortperm(q; rev = true)
     running = 1.0
     adj = similar(q)

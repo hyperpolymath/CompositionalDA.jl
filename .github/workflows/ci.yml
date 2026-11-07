@@ -3,7 +3,7 @@
 name: CI
 on:
   push:
-    branches: [main, 'fix/issue-23-reference-pins']
+    branches: [main, 'fix/issue-23-reference-pins', 'audit/issue-23-fuzz-correctness']
     tags: ['v*']
   pull_request:
 permissions:
@@ -95,6 +95,7 @@ jobs:
             if (!requireNamespace(p, quietly = TRUE)) BiocManager::install(p, ask = FALSE, update = FALSE)
             stopifnot(packageVersion(p) == Sys.getenv("REFERENCE_VERSION"))
             if (p == "ANCOMBC") stopifnot(packageVersion("CVXR") == "1.0.15")
+            if (p == "ALDEx2" && !requireNamespace("testthat", quietly=TRUE)) install.packages("testthat")
             cat(p, as.character(packageVersion(p)), "\n")'
       - uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9 # v2
         with:
@@ -114,11 +115,23 @@ jobs:
           for l in ~/.julia/scratchspaces/*/*/build.log; do echo "== $l"; cat "$l"; done
           julia --project=test/oracle -e 'using RCall; println(rcopy(R"R.version.string"))'
           julia --project=test/oracle -e 'using CompositionalDA, RCall; @assert Base.get_extension(CompositionalDA, :CompositionalDARCallExt) !== nothing; println("extension loaded")'
-      - name: Native vs reference agreement
+      - name: Pristine ALDEx2 discrete-tail defect control
         if: matrix.reference == 'ALDEx2'
         run: |
           export R_HOME="$(R RHOME)"
-          julia --project=test/oracle test/oracle/${{ matrix.script }}
+          julia --project=test/oracle test/oracle/aldex2_tail_control.jl
+      - name: ALDEx2 conformance with the pinned inclusive-tail repair
+        if: always() && matrix.reference == 'ALDEx2'
+        run: |
+          mkdir -p /tmp/aldex-tail-repair
+          for source in stats.fast.R clr_ttest.r; do
+            curl --fail --location --retry 3 "https://raw.githubusercontent.com/hyperpolymath/ALDEx_bioc/c1217796f551373cfd942d5e272cd56e05ce77a9/R/$source" -o "/tmp/aldex-tail-repair/$source"
+          done
+          for source in test-directional-tails.R test-aldex.ttest.R; do
+            curl --fail --location --retry 3 "https://raw.githubusercontent.com/hyperpolymath/ALDEx_bioc/c1217796f551373cfd942d5e272cd56e05ce77a9/tests/testthat/$source" -o "/tmp/aldex-tail-repair/$source"
+          done
+          export R_HOME="$(R RHOME)"
+          ALDEX2_REPAIR_DIR=/tmp/aldex-tail-repair julia --project=test/oracle test/oracle/runoracle.jl
       - name: Pristine ANCOMBC known-defect control (three expected failures)
         if: matrix.reference == 'ANCOMBC'
         run: |

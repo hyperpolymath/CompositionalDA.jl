@@ -24,6 +24,13 @@ end
 validate_counts(::AbstractMatrix) =
     throw(CompositionError("counts must be an integer matrix (raw counts, not normalised values)"))
 
+function float_count_matrix(counts)
+    validate_counts(counts)
+    out = Float64.(counts)
+    all(isfinite, out) || throw(CompositionError("counts are not representable as finite Float64 values"))
+    return out
+end
+
 # Both native methods and their reference adapters share this boundary. In
 # particular, converting missing labels to the string "missing" is forbidden.
 function validate_two_groups(counts, features, groups)
@@ -33,6 +40,10 @@ function validate_two_groups(counts, features, groups)
     length(groups) == n || throw(CompositionError("group labels do not match samples"))
     any(ismissing, features) && throw(CompositionError("feature names cannot be missing"))
     any(ismissing, groups) && throw(CompositionError("group labels cannot be missing"))
+    any(isnothing, features) && throw(CompositionError("feature names cannot be nothing"))
+    any(isnothing, groups) && throw(CompositionError("group labels cannot be nothing"))
+    any(g -> g isa Real && !isfinite(g), groups) &&
+        throw(CompositionError("numeric group labels must be finite"))
     f = string.(features)
     g = string.(groups)
     any(isempty ∘ strip, f) && throw(CompositionError("feature names cannot be empty"))
@@ -46,8 +57,14 @@ function validate_two_groups(counts, features, groups)
     levels = string.(original_levels)
     allunique(levels) || throw(CompositionError("distinct group labels must have distinct display names"))
     length(levels) == 2 || throw(CompositionError("exactly two groups are required"))
-    i1, i2 = (findall(==(level), groups) for level in original_levels)
+    # unique uses isequal, including its treatment of signed zero and mixed
+    # numeric types. Membership and the R labels must use that same partition.
+    i1, i2 = (findall(isequal(level), groups) for level in original_levels)
     min(length(i1), length(i2)) >= 2 || throw(CompositionError("each group needs at least two samples"))
+    length(i1) + length(i2) == n && isempty(intersect(i1, i2)) ||
+        throw(CompositionError("group labels do not define a disjoint sample partition"))
+    g[i1] .= levels[1]
+    g[i2] .= levels[2]
     return (; features = f, groups = g, levels, i1, i2)
 end
 
@@ -60,12 +77,19 @@ end
 """
     closure(x) -> Matrix{Float64}
 
-Divide each row of a strictly positive samples × features matrix by its row sum,
+Divide each row of a nonempty strictly positive samples × features matrix by its row sum,
 so that each row sums to 1.
 """
 function closure(x::AbstractMatrix{<:Real})
+    all(>(0), size(x)) || throw(CompositionError("closure needs a nonempty matrix"))
     all(v -> isfinite(v) && v > 0, x) || throw(CompositionError("closure needs strictly positive finite parts"))
-    return x ./ sum(x; dims = 2)
+    # Scale before summing: both integer totals and finite floating-point
+    # totals can overflow even though every closed proportion is representable.
+    scaled = Float64.(x ./ maximum(x; dims = 2))
+    out = scaled ./ sum(scaled; dims = 2)
+    all(v -> isfinite(v) && v > 0, out) ||
+        throw(CompositionError("closed proportions are not representable as positive Float64 values"))
+    return out
 end
 
 """
@@ -81,6 +105,7 @@ Proved properties (`proofs/PROOF-STATUS.md`, P1):
 - relabelling features permutes the columns in the same way.
 """
 function clr(x::AbstractMatrix{<:Real})
+    all(>(0), size(x)) || throw(CompositionError("clr needs a nonempty matrix"))
     all(v -> isfinite(v) && v > 0, x) || throw(CompositionError("clr needs strictly positive finite parts; apply a ZeroPolicy first"))
     l = log.(x)
     return l .- mean(l; dims = 2)
@@ -92,4 +117,4 @@ end
 Validate raw counts, apply the zero policy, then take the centred log-ratio.
 """
 clr(policy::ZeroPolicy, counts::AbstractMatrix{<:Integer}) =
-    clr(replace_zeros(policy, validate_counts(counts)))
+    clr(replace_zeros(policy, counts))

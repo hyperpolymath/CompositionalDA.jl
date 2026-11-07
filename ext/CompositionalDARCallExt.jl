@@ -11,7 +11,7 @@ module CompositionalDARCallExt
 
 using CompositionalDA
 using CompositionalDA: Provenance, DAResult, validate_counts, CompositionError,
-                       validate_two_groups, validate_mc
+                       validate_two_groups, validate_mc, float_count_matrix
 using DataFrames
 using RCall
 
@@ -31,8 +31,8 @@ function CompositionalDA.aldex2_reference(counts::AbstractMatrix{<:Integer}, fea
     levels = design.levels
     keep = vec(any(>(0), counts; dims = 1))
     count(keep) >= 2 || throw(CompositionError("ALDEx2 needs at least two nonzero features"))
+    reads = permutedims(float_count_matrix(counts[:, keep])) # R integers are only 32-bit
     df = runner() do
-        reads = permutedims(Float64.(counts[:, keep]))     # R integers are only 32-bit
         @rput reads
         conds = [g == levels[1] ? "0" : "1" for g in design.groups]; lv = ["0", "1"]
         @rput conds lv
@@ -73,9 +73,14 @@ function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, fe
     0 <= prevalence < 1 || throw(ArgumentError("prevalence must be in [0,1)"))
     isfinite(pseudocount) && pseudocount > 0 || throw(ArgumentError("pseudocount must be finite and positive"))
     isfinite(tolerance) && 0 < tolerance < 1 || throw(ArgumentError("tolerance must be in (0,1)"))
+    pseudocount = Float64(pseudocount)
+    tolerance = Float64(tolerance)
+    isfinite(pseudocount) && pseudocount > 0 || throw(ArgumentError("pseudocount must be representable as a positive finite Float64"))
+    0 < tolerance < 1 || throw(ArgumentError("tolerance must be representable as a Float64 strictly between 0 and 1"))
     max_iterations > 0 || throw(ArgumentError("max_iterations must be positive"))
+    negative_lower_bound && !structural_zeros && throw(ArgumentError("negative_lower_bound requires structural_zeros"))
+    reads = permutedims(float_count_matrix(counts))
     table, version = runner() do
-        reads = permutedims(Float64.(counts))
         fnames = design.features
         conds = [g == design.levels[1] ? "reference" : "contrast" for g in design.groups]
         @rput reads fnames conds prevalence pseudocount structural_zeros negative_lower_bound conserve tolerance max_iterations

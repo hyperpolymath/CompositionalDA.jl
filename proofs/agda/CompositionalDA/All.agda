@@ -18,3 +18,4 @@ import CompositionalDA.BenjaminiHochberg
 import CompositionalDA.BenjaminiHochberg.StepUp
 import CompositionalDA.PosteriorP
 import CompositionalDA.BiasModel
+import CompositionalDA.DiscreteTails

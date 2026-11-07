@@ -11,7 +11,23 @@
 
 using CompositionalDA, DataFrames, RCall, Statistics, Test
 
+if haskey(ENV,"ALDEX2_REPAIR_DIR")
+    repair_dir = ENV["ALDEX2_REPAIR_DIR"]
+    @rput repair_dir
+    R"""
+    repair_environment <- new.env(parent=asNamespace("ALDEx2"))
+    sys.source(file.path(repair_dir,"stats.fast.R"),envir=repair_environment)
+    sys.source(file.path(repair_dir,"clr_ttest.r"),envir=repair_environment)
+    for (symbol in c("t.fast","wilcox.fast","aldex.ttest"))
+        assignInNamespace(symbol,repair_environment[[symbol]],ns="ALDEx2")
+    for (test_file in c("test-directional-tails.R","test-aldex.ttest.R"))
+        testthat::test_file(file.path(repair_dir,test_file),stop_on_failure=TRUE)
+    """
+    println("REFERENCE OVERRIDE: inclusive directional tails from ",repair_dir)
+end
+
 include("datasets.jl")
+include("adapter_boundaries.jl")
 
 const MC = 512
 const SLACK = 2.0
