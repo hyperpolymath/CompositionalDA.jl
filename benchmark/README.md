@@ -23,5 +23,6 @@ inputs and native results, then runs pinned ANCOMBC 2.12.0 with the explicitly
 identified variance-estimator repair. It records R convergence rather than
 treating an iteration-cap result as a valid fit. A successful investigation
 job means the experiment completed, not that the adverse calibration passed.
-The raw artifact expires after 30 days; archive it with its SHA-256 before
-using it in a release decision.
+The workflow requests 30 days of artifact retention, but repository policy
+may shorten it. Check the artifact expiry and archive it with its SHA-256
+before using it in a release decision.
