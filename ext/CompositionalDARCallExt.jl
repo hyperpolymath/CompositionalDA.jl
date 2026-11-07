@@ -82,7 +82,11 @@ function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, fe
         R"""
         rownames(reads) <- fnames
         colnames(reads) <- paste0("s", seq_len(ncol(reads)))
-        meta <- data.frame(condition=factor(conds, levels=c("reference", "contrast")),
+        # The 2.12.0 generic-matrix input path drops a one-column data.frame
+        # to a factor while subsetting samples. An unused identifier column
+        # preserves its dimensionality; it is not part of the model formula.
+        meta <- data.frame(sample_id=colnames(reads),
+                           condition=factor(conds, levels=c("reference", "contrast")),
                            row.names=colnames(reads))
         reference <- ANCOMBC::ancombc(data=reads, aggregate_data=reads,
             meta_data=meta, tax_level=NULL, formula="condition",

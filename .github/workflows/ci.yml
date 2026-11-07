@@ -82,6 +82,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libcurl4-openssl-dev libssl-dev libxml2-dev libuv1-dev libgsl-dev
       - name: Install the Bioconductor 3.22 references
         run: |
+          export R_LIBS_USER="$GITHUB_WORKSPACE/.r-lib"
+          echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
           mkdir -p "$R_LIBS_USER"
           Rscript -e 'options(Ncpus = 2, timeout = 3600)
             # ANCOMBC 2.12.0 imports the pre-S7 CVXR API. Freeze CRAN as well
