@@ -103,7 +103,7 @@ function ancombc_bias(x, v; tolerance = 1e-7, max_iterations = 1000)
             throw(CompositionError("ANCOM-BC likelihood decreased; no result produced"))
         change = maximum(abs.(vcat(centres-oldcentres, extra-oldextra, mixing-oldmixing)))
         if abs(next_likelihood - likelihood) <= tolerance * (1 + abs(likelihood)) &&
-                change <= sqrt(tolerance) * (1 + maximum(abs, centres))
+                change <= tolerance * (1 + maximum(abs, vcat(centres, extra, mixing)))
             classes = [argmax(@view next_resp[i, :]) for i in eachindex(x)]
             weights = [1 / (v[i] + extra[classes[i]]) for i in eachindex(x)]
             shifts = centres .- centres[2]

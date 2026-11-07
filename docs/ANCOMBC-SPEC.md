@@ -39,6 +39,9 @@ have variances `v[i] + extra[k]`. Ordered component means are estimated by
 weighted isotonic projection. Extra variances are nonnegative. An EM/ECM
 iteration evaluates densities in the log domain, verifies nondecreasing
 likelihood and requires both likelihood and parameter convergence.
+Both stopping checks use `tolerance`; the parameter check is scaled by the
+largest absolute parameter. A square-root tolerance would stop too early on
+the soil fixture's slowly converging fit.
 Initial means are the 0.1/0.5/0.9 quantiles, weights 0.1/0.8/0.1, and
 alternative extra variances the observed contrast variance.
 
@@ -81,3 +84,10 @@ conformance gate against ANCOMBC 2.12.0's original `ancombc`. Its thresholds
 were fixed before observing results. **A paper-derived implementation is not
 automatically equivalent to that R release; the gate must pass before such a
 claim or downstream integration is released.**
+
+The reference wrapper allows 20,000 iterations by default. The pinned R
+implementation returns its current parameters at its iteration cap without a
+convergence error. The oracle therefore records its internal iteration count
+and parameter residual and requires actual convergence before comparing
+statistics. The original comparison at 1,000 reference iterations failed on
+soil; the numerical acceptance thresholds remain unchanged.

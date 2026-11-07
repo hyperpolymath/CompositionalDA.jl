@@ -68,7 +68,7 @@ end
 function CompositionalDA.ancombc_reference(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
     groups::AbstractVector; prevalence::Real=0.1, pseudocount::Real=1.0, structural_zeros::Bool=false,
     negative_lower_bound::Bool=false, conserve::Bool=true, tolerance::Real=1e-7,
-    max_iterations::Integer=1000, runner=f -> f())
+    max_iterations::Integer=20000, runner=f -> f())
     design = validate_two_groups(counts, features, groups)
     0 <= prevalence < 1 || throw(ArgumentError("prevalence must be in [0,1)"))
     isfinite(pseudocount) && pseudocount > 0 || throw(ArgumentError("pseudocount must be finite and positive"))

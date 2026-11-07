@@ -25,6 +25,10 @@ Release requires all of the following, independently:
    no changes to renv.lock, and all required backend/frontend/server checks.
 7. Signed, GitHub-verified commits, no merge commits, correct per-file SPDX,
    passing REUSE and a PR describing versions, validation and limitations.
+8. Human maintainer review and understanding of the AI-assisted code before
+   General registration. General requires Registrator for GitHub packages and
+   normally holds new-package registrations for three days. See its
+   [registration and LLM policies](https://github.com/JuliaRegistries/General#registering-a-package-in-general).
 
 A local development environment may use `Pkg.develop` to test an integration.
 It is not a compliant released dependency or a substitute for registration.
