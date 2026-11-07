@@ -117,4 +117,4 @@ end
 Validate raw counts, apply the zero policy, then take the centred log-ratio.
 """
 clr(policy::ZeroPolicy, counts::AbstractMatrix{<:Integer}) =
-    clr(replace_zeros(policy, counts))
+    clr(replace_zeros(policy, validate_counts(counts)))
