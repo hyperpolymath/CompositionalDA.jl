@@ -29,6 +29,32 @@ end
 include("datasets.jl")
 include("adapter_boundaries.jl")
 
+@testset "Native directional branches against independent R stats" begin
+    rng = StableRNG(23)
+    for (n1,n2,tied) in ((2,3,false),(49,49,false),(49,50,false),
+                         (50,49,false),(50,50,false),(3,4,true),(50,50,true))
+        a = tied ? Float64.(rand(rng,1:4,n1)) : randn(rng,n1)
+        b = tied ? Float64.(rand(rng,1:4,n2)) : randn(rng,n2) .+ 0.5
+        @rput a b
+        R"""
+        rank_tails <- vapply(c("greater","less"),function(direction)
+          suppressWarnings(wilcox.test(a,b,correct=FALSE,alternative=direction)$p.value),0)
+        welch_tails <- vapply(c("greater","less"),function(direction)
+          t.test(a,b,alternative=direction)$p.value,0)
+        """
+        cache = n1 < 50 && n2 < 50 ? CompositionalDA.mann_whitney_upper_tail(n1,n2) : nothing
+        @test collect(CompositionalDA.wilcoxon_tails(a,b,cache)) ≈ rcopy(Vector{Float64},R"rank_tails") atol=1e-12
+        @test collect(CompositionalDA.welch_tails(a,b)) ≈ rcopy(Vector{Float64},R"welch_tails") atol=1e-12
+    end
+    x,f,g,_ = mock_dataset()
+    canonical = aldex2_reference(x,f,g;mc_samples=8,seed=23)
+    numeric_groups = [g[i] == first(g) ? (isodd(i) ? 2 : 2.0) : (isodd(i) ? 10 : 10.0) for i in eachindex(g)]
+    # The fixture starts in its lower sorted level; equivalent mixed numeric
+    # labels must not split the R group encoding.
+    @test first(g) == first(sort(unique(g)))
+    @test isequal(aldex2_reference(x,f,numeric_groups;mc_samples=8,seed=23).table,canonical.table)
+end
+
 const MC = 512
 const SLACK = 2.0
 const FLOOR = (effect = 0.05, pvalue = 0.01, qvalue = 0.01,

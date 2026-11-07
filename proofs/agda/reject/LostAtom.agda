@@ -2,7 +2,7 @@
 -- SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 -- EXPECT: 0 != 1
 {-# OPTIONS --safe --without-K #-}
-module LostAtom where
+module reject.LostAtom where
 open import Data.Nat using (_∸_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 false-inclusive-lower : 6 ∸ 6 ≡ 1
