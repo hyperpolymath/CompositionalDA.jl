@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-using CompositionalDA, DataFrames, RCall, Test
+using CompositionalDA, DataFrames, RCall, Statistics, Test
 include("datasets.jl")
 
 # Fixed BEFORE examining the comparison results. These are numerical
