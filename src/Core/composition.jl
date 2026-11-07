@@ -87,7 +87,7 @@ function closure(x::AbstractMatrix{<:Real})
     # totals can overflow even though every closed proportion is representable.
     # Widen narrow floats before division, while leaving large integers and
     # arbitrary-precision values in their original scaling domain.
-    wide = eltype(x) <: Union{Float16,Float32} ? Float64.(x) : x
+    wide = map(v -> v isa Union{Float16,Float32} ? Float64(v) : v, x)
     scaled = Float64.(wide ./ maximum(wide; dims = 2))
     out = scaled ./ sum(scaled; dims = 2)
     all(v -> isfinite(v) && v > 0, out) ||

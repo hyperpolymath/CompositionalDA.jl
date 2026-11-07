@@ -15,6 +15,7 @@ CompositionalDA.replace_zeros(::AbsoluteCountsPolicy, counts::AbstractMatrix{<:I
         expected = Float64.(BigFloat.(narrow) ./ sum(BigFloat.(narrow)))
         @test all(>(0), closure(narrow))
         @test closure(narrow) ≈ expected rtol=2e-15
+        @test closure(Matrix{Real}(narrow)) ≈ expected rtol=2e-15
     end
     @test_throws CompositionError clr(AbsoluteCountsPolicy(), [-1 2])
     @test clr(AbsoluteCountsPolicy(), [1 2]) ≈ clr([2.0 3.0])
@@ -56,6 +57,17 @@ CompositionalDA.replace_zeros(::AbsoluteCountsPolicy, counts::AbstractMatrix{<:I
             Any[missing_label, missing_label, 1, 1])
     end
     @test_throws CompositionError CompositionalDA.validate_two_groups(x, ["a", nothing], [1, 1, 2, 2])
+end
+
+@testset "BH preserves pointwise bounds without multiply-divide cancellation" begin
+    @test all(bh_adjust([0.1,0.3,0.7]) .>= [0.1,0.3,0.7])
+    for seed in (23,20261107,0xcafe)
+        rng=StableRNG(seed)
+        for _ in 1:256
+            probabilities=rand(rng,rand(rng,1:100))
+            @test all(probabilities .<= bh_adjust(probabilities) .<= 1)
+        end
+    end
 end
 
 @testset "Seeded count and composition fuzz" begin
