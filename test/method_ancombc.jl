@@ -27,6 +27,9 @@
     @test all(result.table.effect[4:5] .< 0)
     @test result.provenance.parameters[:iterations] < 1000
     @test result.table == ancombc(x, features, groups).table
+    ordinary = ancombc(x, features, groups; conserve=false)
+    @test ordinary.table.effect == result.table.effect
+    @test all(result.table.se .>= ordinary.table.se)
 
     perm = reverse(1:d)
     permuted = ancombc(x[:, perm], features[perm], groups)

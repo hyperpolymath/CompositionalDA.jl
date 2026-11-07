@@ -6,7 +6,7 @@
 `ancombc` implements the **original two-group model** of Lin and Peddada,
 *Analysis of compositions of microbiomes with bias correction*, Nature
 Communications 11, 3514 (2020), doi:10.1038/s41467-020-17041-7. It was derived
-from the published equations, not copied or translated from the GPL R source.
+from the published equations, not copied or translated from the R estimator source.
 It is not ANCOM-BC2. Covariates, interactions, repeated measures, global tests
 and pairwise testing of more than two groups are outside this API.
 
@@ -49,9 +49,14 @@ certify a global mixture-likelihood maximum. Component collapse, non-finite
 variance, decreasing likelihood or iteration exhaustion raises
 `CompositionError`; no other method is substituted.
 
-The ordinary effect subtracts the fitted middle mean. With `conserve=true`,
-the effect uses the hard-classification weighted bias estimate (equation 22)
-and the standard error is `sqrt(v[i]) + sqrt(bias_variance)` (equation 35).
+The effect subtracts the fitted middle mean, independently of `conserve`,
+matching the pinned reference API's distinction between coefficient and
+variance estimation. With `conserve=true`, the standard error is
+`sqrt(v[i]) + sqrt(bias_variance)`, using the WLS variance approximation in
+equation 31 and the conservative bound in equation 35. The paper's equation
+35 also substitutes the WLS point estimate in its numerator; this API retains
+the EM coefficient when changing the uncertainty option. The WLS point
+estimate remains in provenance for comparison, not as the reported effect.
 Two-sided normal Wald p-values are BH-adjusted over tested taxa. Natural-log
 effects and all fit settings are recorded in provenance.
 

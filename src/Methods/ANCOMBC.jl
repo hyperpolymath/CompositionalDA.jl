@@ -171,7 +171,9 @@ function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
     fit = ancombc_bias(moments.difference, moments.variance; tolerance, max_iterations)
     d = length(kept)
     effect, se, statistic, p = (fill(NaN, d) for _ in 1:4)
-    effect[tested] = moments.difference .- (conserve ? fit.wls : fit.bias)
+    # The reference API's conserve option changes the uncertainty estimate,
+    # not the fitted coefficient. WLS supplies the bias-variance approximation.
+    effect[tested] = moments.difference .- fit.bias
     se[tested] = sqrt.(moments.variance) .+ (conserve ? sqrt(fit.variance) : 0.0)
     statistic[tested] = effect[tested] ./ se[tested]
     p[tested] = 2 .* ccdf.(Normal(), abs.(statistic[tested]))
