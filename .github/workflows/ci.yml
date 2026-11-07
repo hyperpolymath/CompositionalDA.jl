@@ -3,7 +3,7 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, 'fix/issue-23-reference-pins']
     tags: ['v*']
   pull_request:
 permissions:
@@ -77,18 +77,22 @@ jobs:
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .r-lib
-          key: r-4.5.0-bioc-3.22-${{ matrix.reference }}-oracle-v2
+          key: r-4.5.0-bioc-3.22-cran-2026-02-13-${{ matrix.reference }}-oracle-v3
       - name: Install reference build dependencies
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libcurl4-openssl-dev libssl-dev libxml2-dev libuv1-dev libgsl-dev
       - name: Install the Bioconductor 3.22 references
         run: |
           mkdir -p "$R_LIBS_USER"
           Rscript -e 'options(Ncpus = 2, timeout = 3600)
+            # ANCOMBC 2.12.0 imports the pre-S7 CVXR API. Freeze CRAN as well
+            # as Bioconductor; latest CRAN no longer supplies that API.
+            options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/2026-02-13"))
             if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
             BiocManager::install(version = "3.22", ask = FALSE, update = FALSE)
             p <- Sys.getenv("REFERENCE_PACKAGE")
             if (!requireNamespace(p, quietly = TRUE)) BiocManager::install(p, ask = FALSE, update = FALSE)
             stopifnot(packageVersion(p) == Sys.getenv("REFERENCE_VERSION"))
+            if (p == "ANCOMBC") stopifnot(packageVersion("CVXR") == "1.0.15")
             cat(p, as.character(packageVersion(p)), "\n")'
       - uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9 # v2
         with:
