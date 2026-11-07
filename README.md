@@ -17,6 +17,15 @@ backend.
 > gate now checks all statistics and shared Monte-Carlo instances. ANCOM-BC's
 > precise model and limitations are described in `docs/ANCOMBC-SPEC.md`.
 
+> **Launch review remains pending.** The predeclared calibration pilot found
+> severe false-discovery inflation for original ANCOM-BC with four versus
+> sixteen samples under a complete null: 19 of 29 successful fits made at least
+> one discovery at q <= 0.05; three additional fits refused to return a result.
+> This is a release blocker for a general calibration claim. See
+> [`docs/LAUNCH-READINESS.adoc`](docs/LAUNCH-READINESS.adoc), the reproducible
+> protocol and scripts in `benchmark/`, and [`EXPLAINME.adoc`](EXPLAINME.adoc).
+> Passing numerical reference comparisons does not establish FDR control.
+
 The v0.3 implementation, tests, proofs and integration work were developed
 with OpenAI Codex assistance. General registration requires a human maintainer
 to review and understand these contributions; automated checks and code review

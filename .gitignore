@@ -2,3 +2,4 @@
 *.agdai
 _build/
 /test/oracle/Manifest.toml
+/benchmark/Manifest.toml
