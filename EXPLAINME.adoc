@@ -63,7 +63,7 @@ data provenance and proof checkers remain in the trusted environment.
 Agda algebra does not independently verify those implementations. No second
 Rocq/Lean witness or full executable refinement is claimed.
 
-General registration is explicitly on hold pending the human maintainer's review
-of the changed implementation. A signature authenticates a commit, not its
-mathematical or scientific correctness. Version 0.3.0 in Project.toml is not a
+The maintainer reviewed the changed implementation and released it for
+registration in General as 0.1.0. A signature authenticates a commit, not its
+mathematical or scientific correctness. Version 0.1.0 in Project.toml is not a
 stable-release grade. No CRG/TRG/RSR certificate is asserted.

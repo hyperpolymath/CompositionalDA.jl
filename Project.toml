@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 name = "CompositionalDA"
 uuid = "bb1787b7-c25e-80cd-8559-27e3f8d35816"
-version = "0.3.0"
+version = "0.1.0"
 description = "Native Julia two-group compositional differential abundance with explicit numerical and proof boundaries."
 authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 
