@@ -3,6 +3,23 @@
 reviews:
   # No "review skipped" status comments, such as "Draft PR not reviewed".
   review_status: false
+  # No poem and no in-progress "fortune" lines in the review summary.
+  poem: false
+  in_progress_fortune: false
+  # Review-only: no generated commits or pull requests.
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+    autofix:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
+      enabled: false
 # No automatic "Issue Planner" comments on new issues.
 issue_enrichment:
   auto_enrich:
