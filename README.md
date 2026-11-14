@@ -11,22 +11,22 @@ live in a separate package,
 It needs no Python and no TensorFlow. R is needed only for the optional reference
 backend.
 
-> **Status: v0.3 development.** Native implementations and reference adapters
+> **Status: v0.1.0, submitted to the General registry.** Native implementations and reference adapters
 > exist. Release and integration are gated by `docs/ISSUE-23-ACCEPTANCE.md`;
 > implementation is not a declaration of reference conformance. The ALDEx2
 > gate now checks all statistics and shared Monte-Carlo instances. ANCOM-BC's
 > precise model and limitations are described in `docs/ANCOMBC-SPEC.md`.
 
-> **Launch review remains pending.** The predeclared calibration pilot found
+> **ANCOM-BC is experimental in v0.1.0.** The predeclared calibration pilot found
 > severe false-discovery inflation for original ANCOM-BC with four versus
 > sixteen samples under a complete null: 19 of 29 successful fits made at least
 > one discovery at q <= 0.05; three additional fits refused to return a result.
-> This is a release blocker for a general calibration claim. See
+> This release makes no FDR-calibration claim for ANCOM-BC. See
 > [`docs/LAUNCH-READINESS.adoc`](docs/LAUNCH-READINESS.adoc), the reproducible
 > protocol and scripts in `benchmark/`, and [`EXPLAINME.adoc`](EXPLAINME.adoc).
 > Passing numerical reference comparisons does not establish FDR control.
 
-The v0.3 implementation, tests, proofs and integration work were developed
+The implementation, tests, proofs and integration work were developed
 with OpenAI Codex assistance. General registration requires a human maintainer
 to review and understand these contributions; automated checks and code review
 do not replace that review. Verification scope is recorded in
