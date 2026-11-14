@@ -5,7 +5,7 @@
 Assessment date: 2026-11-07. Candidate numerical source:
 `911989080145b9ab43ce06a8c1c8dfe6712ca2e3`.
 This is the author's assessment, not independent scientific review.
-Registration remains on hold. No alpha/beta/stable or RSR certification is granted.
+Update 2026-11-14: v0.1.0 is submitted to the General registry. That registration grants no alpha/beta/stable or RSR certification, and it makes no FDR-calibration claim for ANCOM-BC, which stays experimental.
 
 == Source authority
 
