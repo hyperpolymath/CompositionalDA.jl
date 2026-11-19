@@ -3,7 +3,8 @@
 #
 # Creates the git tag and GitHub release for a version once General has merged
 # its registration. Without it a registered version has no tag in this
-# repository. It reads the registry; it does not register anything.
+# repository. It reads the registry; it does not register anything. issues: write
+# lets it open its manual-tagging issue if a tag push fails.
 name: TagBot
 on:
   issue_comment:
@@ -13,7 +14,7 @@ permissions:
   actions: read
   checks: read
   contents: write
-  issues: read
+  issues: write
   pull-requests: read
 jobs:
   TagBot:
