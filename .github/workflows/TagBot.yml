@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Creates the git tag and GitHub release for a version once General has merged
+# its registration. Without it a registered version has no tag in this
+# repository. It reads the registry; it does not register anything. issues: write
+# lets it open its manual-tagging issue if a tag push fails.
+name: TagBot
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+permissions:
+  actions: read
+  checks: read
+  contents: write
+  issues: write
+  pull-requests: read
+jobs:
+  TagBot:
+    if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: JuliaRegistries/TagBot@87cc4cc2b4639f6c743f5772f376a32914060732 # v1.25.15
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
